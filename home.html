@@ -122,6 +122,15 @@ a{color:inherit;text-decoration:none}
   transition: opacity 0.15s, transform 0.1s, background 0.15s, color 0.15s;
   border: 1px solid transparent;
   -webkit-tap-highlight-color: transparent;
+  font-family: inherit;
+  outline: none;
+}
+.price-card .btn{
+  display: flex;
+  width: 100%;
+  margin-top: 4px;
+  padding: 13px 20px;
+  font-size: 14px;
 }
 .btn:active{transform:scale(0.98)}
 .btn-primary{background:var(--accent);color:white}
@@ -552,7 +561,7 @@ footer{
 </section>
 
 <!-- PRICING -->
-<section id="prijzen">
+<section id="pricing">
   <div class="container">
     <div class="section-eyebrow">Prijzen</div>
     <h2 class="section-head">Eenvoudige prijzen</h2>
@@ -562,6 +571,7 @@ footer{
         <div class="price-name">Starter</div>
         <div class="price-amount">Gratis</div>
         <div class="price-desc">1 project, max 3 gebruikers. Alle basisfuncties inbegrepen.</div>
+        <a href="/index.html" class="btn btn-ink">Gratis starten</a>
       </div>
 
       <div class="price-card featured">
@@ -569,12 +579,14 @@ footer{
         <div class="price-name">Groei</div>
         <div class="price-amount">€49<small>/maand</small></div>
         <div class="price-desc">Onbeperkt gebruikers, 3 projecten, CSV export, prioritaire support.</div>
+        <button type="button" onclick="startCheckout('growth')" class="btn btn-primary">Start 14 dagen gratis</button>
       </div>
 
       <div class="price-card">
         <div class="price-name">Pro</div>
         <div class="price-amount">€99<small>/maand</small></div>
         <div class="price-desc">Onbeperkt alles, eigen logo, API-toegang, dedicated account manager.</div>
+        <button type="button" onclick="startCheckout('pro')" class="btn btn-outline">Start 14 dagen gratis</button>
       </div>
 
     </div>
@@ -603,11 +615,37 @@ footer{
     </div>
     <div class="footer-links">
       <a href="/index.html">Inloggen</a>
-      <a href="#prijzen">Privacy</a>
+      <a href="#pricing">Privacy</a>
       <a href="mailto:hello@crowdstamp.nl">Contact</a>
     </div>
   </div>
 </footer>
+
+<script>
+async function startCheckout(plan) {
+  const email = (window.prompt('E-mailadres voor je 14 dagen proef:') || '').trim();
+  if (!email) return;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    alert('Voer een geldig e-mailadres in.');
+    return;
+  }
+  try {
+    const r = await fetch('/.netlify/functions/create-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan, email }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.url) {
+      alert('Er ging iets mis: ' + (j.error || ('HTTP ' + r.status)));
+      return;
+    }
+    window.location.href = j.url;
+  } catch (e) {
+    alert('Netwerkfout: ' + e.message);
+  }
+}
+</script>
 
 </body>
 </html>

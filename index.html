@@ -987,6 +987,9 @@ svg{display:block}
         </div>
         <button class="csv-btn" id="csv-btn" onclick="exportCSV()" disabled>Export CSV</button>
       </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:-8px">
+        <button type="button" id="portal-btn" onclick="openPortal()" style="all:unset;cursor:pointer;font-size:12px;color:var(--ink-3);font-weight:500;padding:4px 2px;letter-spacing:-0.005em;-webkit-tap-highlight-color:transparent">Abonnement beheren →</button>
+      </div>
       <div class="admin-stats" id="admin-stats">—</div>
       <div id="admin-list" style="display:flex;flex-direction:column;gap:10px"></div>
     </div>
@@ -1649,6 +1652,40 @@ function renderRegCard(r) {
     ` : ''}
   `;
   return card;
+}
+
+// ════════════════════════════════════════════════════════
+// Stripe Customer Portal
+// ════════════════════════════════════════════════════════
+async function openPortal() {
+  if (!S.profile?.company_id) { toast('Geen bedrijf gekoppeld'); return; }
+  const btn = document.getElementById('portal-btn');
+  const prev = btn?.textContent;
+  if (btn) { btn.textContent = 'Bezig…'; btn.disabled = true; }
+
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { toast('Niet ingelogd'); if (btn){btn.textContent=prev;btn.disabled=false;} return; }
+
+  try {
+    const r = await fetch('/.netlify/functions/create-portal', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ companyId: S.profile.company_id }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.url) {
+      toast(j.error || ('Portal openen mislukt (HTTP ' + r.status + ')'));
+      if (btn) { btn.textContent = prev; btn.disabled = false; }
+      return;
+    }
+    window.location.href = j.url;
+  } catch (e) {
+    toast('Netwerkfout: ' + e.message);
+    if (btn) { btn.textContent = prev; btn.disabled = false; }
+  }
 }
 
 // ════════════════════════════════════════════════════════
