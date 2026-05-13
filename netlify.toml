@@ -6,3 +6,13 @@
 
 [build]
   publish = "."
+
+[[redirects]]
+  from = "/"
+  to = "/home.html"
+  status = 200
+
+[[redirects]]
+  from = "/app"
+  to = "/index.html"
+  status = 200
