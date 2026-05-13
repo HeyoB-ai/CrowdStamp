@@ -580,6 +580,7 @@ footer{
 <form name="pro-contact" netlify netlify-honeypot="bot-field" hidden>
   <input type="text" name="naam"/>
   <input type="email" name="email"/>
+  <input type="tel" name="telefoon"/>
   <textarea name="bericht"></textarea>
   <input type="hidden" name="plan"/>
   <input type="text" name="bot-field"/>
@@ -868,6 +869,10 @@ footer{
           <input id="contact-email" name="email" type="email" placeholder="jouw@email.nl" autocomplete="email" required/>
         </div>
         <div class="modal-field">
+          <div class="modal-field-label">Telefoonnummer</div>
+          <input id="telefoon-input" name="telefoon" type="tel" placeholder="+31 6 12345678" autocomplete="tel" minlength="10" required/>
+        </div>
+        <div class="modal-field">
           <div class="modal-field-label">Bericht</div>
           <textarea id="contact-message" name="bericht" rows="4" placeholder="Vertel iets over je bedrijf en wat je nodig hebt…" minlength="10" required></textarea>
         </div>
@@ -971,6 +976,7 @@ function closeContactModal() {
   document.body.style.overflow = '';
   document.getElementById('contact-name').value = '';
   document.getElementById('contact-email').value = '';
+  document.getElementById('telefoon-input').value = '';
   document.getElementById('contact-message').value = '';
   document.getElementById('contact-submit-label').textContent = 'Verstuur';
   document.getElementById('contact-submit').disabled = false;
@@ -981,25 +987,28 @@ function closeContactModal() {
 async function submitContactForm() {
   const naam = document.getElementById('contact-name').value.trim();
   const email = document.getElementById('contact-email').value.trim();
+  const telefoon = document.getElementById('telefoon-input').value.trim();
   const bericht = document.getElementById('contact-message').value.trim();
   const errorEl = document.getElementById('contact-error');
   const submitBtn = document.getElementById('contact-submit');
   const submitLabel = document.getElementById('contact-submit-label');
 
-  console.log('Form submit:', { naam, email, bericht });
+  console.log('Form submit:', { naam, email, telefoon, bericht });
 
   // Mark invalid fields with red border
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const naamField = document.getElementById('contact-name').closest('.modal-field');
   const emailField = document.getElementById('contact-email').closest('.modal-field');
+  const telefoonField = document.getElementById('telefoon-input').closest('.modal-field');
   const berichtField = document.getElementById('contact-message').closest('.modal-field');
   naamField.classList.toggle('error', !naam || naam.length < 2);
   emailField.classList.toggle('error', !email || !emailValid);
+  telefoonField.classList.toggle('error', !telefoon || telefoon.length < 10);
   berichtField.classList.toggle('error', !bericht || bericht.length < 10);
 
   errorEl.classList.remove('show');
 
-  if (!naam || !email || !bericht) {
+  if (!naam || !email || !telefoon || !bericht) {
     errorEl.textContent = 'Vul alle velden in';
     errorEl.classList.add('show');
     return;
@@ -1011,6 +1020,11 @@ async function submitContactForm() {
   }
   if (!emailValid) {
     errorEl.textContent = 'Voer een geldig e-mailadres in';
+    errorEl.classList.add('show');
+    return;
+  }
+  if (telefoon.length < 10) {
+    errorEl.textContent = 'Telefoonnummer moet minimaal 10 tekens zijn';
     errorEl.classList.add('show');
     return;
   }
@@ -1028,6 +1042,7 @@ async function submitContactForm() {
       'form-name': 'pro-contact',
       'naam': naam,
       'email': email,
+      'telefoon': telefoon,
       'bericht': bericht,
       'plan': 'Pro'
     }).toString();
@@ -1051,7 +1066,7 @@ async function submitContactForm() {
 }
 
 // Clear red borders as the user fixes each field
-['contact-name','contact-email','contact-message'].forEach(id => {
+['contact-name','contact-email','telefoon-input','contact-message'].forEach(id => {
   const el = document.getElementById(id);
   if (el) el.addEventListener('input', () => el.closest('.modal-field')?.classList.remove('error'));
 });
