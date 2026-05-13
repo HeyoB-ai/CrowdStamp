@@ -1032,7 +1032,7 @@ async function submitContactForm() {
       'plan': 'Pro'
     }).toString();
 
-    const r = await fetch('/', {
+    const r = await fetch('/home.html', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: body
