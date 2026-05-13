@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
@@ -53,7 +54,7 @@ html,body{
   top: 0;
   z-index: 50;
 }
-.hero-top{display:flex;align-items:center;justify-content:space-between}
+.hero-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
 
 .wordmark{display:flex;align-items:center;gap:7px}
 .stamp-mark{flex-shrink:0}
@@ -64,6 +65,8 @@ html,body{
   letter-spacing: -0.035em;
   color: var(--ink);
 }
+
+.header-actions{display:flex;align-items:center;gap:8px}
 
 .status-pill{
   display: flex;
@@ -82,6 +85,33 @@ html,body{
 }
 .status-dot.active{background: var(--accent);box-shadow: 0 0 0 3px rgba(232,65,10,0.18)}
 .status-dot.done{background: var(--good);box-shadow: 0 0 0 3px rgba(22,163,74,0.18)}
+
+.role-pill{
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  background: rgba(232,65,10,0.1);
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+.logout-btn{
+  all: unset;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--bg-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-2);
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.logout-btn:active{background:var(--line)}
 
 .hero-time-area{margin-top:18px}
 .hero-date{font-size:12px;color:var(--ink-3);letter-spacing:-0.005em;margin-bottom:4px}
@@ -338,8 +368,8 @@ textarea.field-input{
 .tab-item.active{color:var(--ink)}
 .tab-label{font-size:10.5px;font-weight:600;letter-spacing:-0.005em}
 
-/* ── Log screen ── */
-.log-screen{display:none;flex-direction:column;gap:12px;padding:14px 14px 120px}
+/* ── Log / Me screens ── */
+.log-screen,.me-screen{display:none;flex-direction:column;gap:12px;padding:14px 14px 120px}
 .log-entry{
   background:var(--white);
   border-radius:16px;
@@ -386,29 +416,355 @@ textarea.field-input{
   letter-spacing:-0.005em;
 }
 
-/* ── Icons (inline SVG helpers) ── */
+/* ── Auth screen ── */
+.auth-screen{
+  min-height: 100vh;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--bg);
+}
+.auth-card{
+  width: 100%;
+  max-width: 380px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 28px 24px;
+}
+.auth-logo{display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:22px}
+.auth-logo-text{
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: -0.035em;
+}
+.auth-title{
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  letter-spacing: -0.025em;
+  text-align: center;
+}
+.auth-sub{
+  font-size: 13px;
+  color: var(--ink-3);
+  text-align: center;
+  margin-bottom: 22px;
+}
+.auth-field{
+  margin-bottom: 10px;
+  padding: 11px 14px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.auth-field-label{
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-4);
+  margin-bottom: 2px;
+}
+.auth-field input{
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -0.012em;
+  caret-color: var(--accent);
+}
+.auth-btn{
+  all: unset;
+  cursor: pointer;
+  box-sizing: border-box;
+  width: 100%;
+  background: var(--ink);
+  color: white;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  text-align: center;
+  margin-top: 10px;
+  transition: opacity 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.auth-btn:active:not([disabled]){transform:scale(0.98)}
+.auth-btn[disabled]{opacity:0.4;cursor:not-allowed}
+.auth-error{
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: rgba(232,65,10,0.08);
+  border: 1px solid rgba(232,65,10,0.2);
+  border-radius: 8px;
+  color: var(--accent);
+  font-size: 12.5px;
+  font-weight: 500;
+  display: none;
+}
+.auth-error.show{display:block}
+
+/* ── Loading overlay ── */
+.loading-overlay{
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+}
+.loading-spinner{
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2.5px solid var(--line);
+  border-top-color: var(--accent);
+  animation: spin 0.7s linear infinite;
+}
+
+/* ── Admin ── */
+.admin-toolbar{
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.date-input-wrap{
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.date-input-lbl{
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-4);
+}
+.date-input{
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.015em;
+  padding: 0;
+  width: 100%;
+}
+.csv-btn{
+  all: unset;
+  cursor: pointer;
+  background: var(--ink);
+  color: white;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s;
+}
+.csv-btn:active:not([disabled]){transform:scale(0.97)}
+.csv-btn[disabled]{opacity:0.3;cursor:not-allowed}
+
+.admin-stats{
+  font-size: 11.5px;
+  color: var(--ink-3);
+  font-weight: 500;
+  padding: 0 4px;
+  letter-spacing: -0.005em;
+}
+
+.reg-card{
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.reg-head{
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.reg-name{
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+.reg-project{
+  font-size: 11.5px;
+  color: var(--ink-3);
+  margin-top: 1px;
+  letter-spacing: -0.005em;
+}
+.reg-times{
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  text-align: right;
+  white-space: nowrap;
+}
+.reg-total{
+  font-size: 11px;
+  color: var(--good);
+  font-weight: 600;
+  margin-top: 1px;
+  text-align: right;
+}
+.reg-body{
+  padding: 10px 14px;
+}
+.reg-gps{
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+}
+.reg-gps-item{display:flex;gap:6px;align-items:baseline}
+.reg-gps-lbl{
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-4);
+  min-width: 36px;
+}
+.reg-gps-val{
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 500;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  font-size: 11.5px;
+}
+.reg-notes{
+  font-family: 'Inter', sans-serif;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  line-height: 1.5;
+  padding-top: 8px;
+  margin-top: 8px;
+  border-top: 1px solid var(--line);
+}
+.reg-photos{
+  display: flex;
+  gap: 6px;
+  padding: 0 14px 12px;
+  flex-wrap: wrap;
+}
+.reg-photo{
+  width: 46px;
+  height: 46px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--bg-2);
+}
+.reg-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.reg-photo a{display:block;width:100%;height:100%}
+
+.admin-empty{
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--ink-3);
+  font-size: 14px;
+  background: var(--white);
+  border-radius: 14px;
+  border: 1px solid var(--line);
+}
+
+/* ── Icons ── */
 svg{display:block}
 </style>
 </head>
 <body>
 
-<div class="app" id="app">
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-spinner"></div>
+</div>
+
+<!-- AUTH SCREEN -->
+<div class="auth-screen" id="screen-auth">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <svg viewBox="0 0 24 24" width="26" height="26">
+        <rect x="2" y="2" width="20" height="20" rx="5.5" fill="#0f0f0f"/>
+        <rect x="7.5" y="7.5" width="9" height="9" rx="2.2" fill="white"/>
+        <circle cx="12" cy="12" r="1.6" fill="#0f0f0f"/>
+      </svg>
+      <span class="auth-logo-text">crowdstamp</span>
+    </div>
+    <div class="auth-title">Inloggen</div>
+    <div class="auth-sub">Voer je e-mail en wachtwoord in</div>
+
+    <form id="auth-form" onsubmit="event.preventDefault();doLogin()">
+      <div class="auth-field">
+        <div class="auth-field-label">E-mail</div>
+        <input id="auth-email" type="email" autocomplete="email" placeholder="naam@bedrijf.nl" required/>
+      </div>
+      <div class="auth-field">
+        <div class="auth-field-label">Wachtwoord</div>
+        <input id="auth-password" type="password" autocomplete="current-password" required/>
+      </div>
+
+      <div class="auth-error" id="auth-error"></div>
+
+      <button class="auth-btn" id="auth-btn" type="submit">
+        <span id="auth-btn-label">Inloggen</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app" style="display:none">
 
   <!-- HERO -->
   <div class="hero">
     <div class="hero-top">
       <div class="wordmark">
-        <!-- Stamp mark logo -->
         <svg class="stamp-mark" viewBox="0 0 24 24" width="22" height="22">
-          <rect x="2" y="2" width="20" height="20" rx="5.5" fill="var(--ink)"/>
+          <rect x="2" y="2" width="20" height="20" rx="5.5" fill="#0f0f0f"/>
           <rect x="7.5" y="7.5" width="9" height="9" rx="2.2" fill="white"/>
-          <circle cx="12" cy="12" r="1.6" fill="var(--ink)"/>
+          <circle cx="12" cy="12" r="1.6" fill="#0f0f0f"/>
         </svg>
         <span class="wordmark-text">crowdstamp</span>
       </div>
-      <div class="status-pill">
-        <div class="status-dot" id="status-dot"></div>
-        <span id="status-label">Niet ingecheckt</span>
+      <div class="header-actions">
+        <div class="status-pill" id="status-pill" style="display:none">
+          <div class="status-dot" id="status-dot"></div>
+          <span id="status-label">Niet ingecheckt</span>
+        </div>
+        <span class="role-pill" id="role-pill" style="display:none">Admin</span>
+        <button class="logout-btn" onclick="doLogout()" title="Uitloggen">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 7V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2"/><path d="M18 15l4-4-4-4M22 11H10"/></svg>
+        </button>
       </div>
     </div>
     <div class="hero-time-area">
@@ -416,6 +772,9 @@ svg{display:block}
       <div class="hero-time" id="hero-time">--:--</div>
     </div>
   </div>
+
+  <!-- ════════════════ WORKER VIEWS ════════════════ -->
+  <div id="worker-views" style="display:none">
 
   <!-- TODAY SCREEN -->
   <div class="scroll-body" id="screen-today">
@@ -456,7 +815,7 @@ svg{display:block}
           <div class="action-tile primary-in" id="tile-in" onclick="handlePunch('in')">
             <div class="tile-top">
               <span class="tile-label">Inchecken</span>
-              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" id="icon-in"><path d="M11 4H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/><path d="M14 8l4 4-4 4M18 12H10"/></svg>
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/><path d="M14 8l4 4-4 4M18 12H10"/></svg>
             </div>
             <div class="tile-time" id="time-in">—  :  —</div>
           </div>
@@ -464,7 +823,7 @@ svg{display:block}
           <div class="action-tile" id="tile-out" disabled onclick="handlePunch('out')">
             <div class="tile-top">
               <span class="tile-label">Uitchecken</span>
-              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" id="icon-out"><path d="M13 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M10 8l-4 4 4 4M6 12h8"/></svg>
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M10 8l-4 4 4 4M6 12h8"/></svg>
             </div>
             <div class="tile-time" id="time-out">—  :  —</div>
           </div>
@@ -550,6 +909,21 @@ svg{display:block}
     <div class="log-empty" id="log-empty">Nog geen registraties vandaag</div>
   </div>
 
+  <!-- ME SCREEN -->
+  <div class="me-screen" id="screen-me">
+    <div class="card no-pad">
+      <div class="summary-row"><span class="sum-key">Naam</span><span class="sum-val" id="me-name">—</span></div>
+      <div class="summary-row"><span class="sum-key">E-mail</span><span class="sum-val" id="me-email">—</span></div>
+      <div class="summary-row"><span class="sum-key">Rol</span><span class="sum-val" id="me-role">—</span></div>
+    </div>
+    <button class="submit-btn" onclick="doLogout()" style="background:var(--accent)">
+      <span class="submit-btn-label">Uitloggen</span>
+      <div class="submit-circle" style="background:rgba(255,255,255,0.2)">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 7V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2"/><path d="M18 15l4-4-4-4M22 11H10"/></svg>
+      </div>
+    </button>
+  </div>
+
   <!-- TAB BAR -->
   <div class="tab-bar">
     <div class="tab-item active" id="tab-today" onclick="switchTab('today')">
@@ -566,33 +940,192 @@ svg{display:block}
     </div>
   </div>
 
+  </div><!-- /worker-views -->
+
+  <!-- ════════════════ ADMIN VIEW ════════════════ -->
+  <div id="admin-view" style="display:none">
+    <div class="scroll-body">
+      <div class="admin-toolbar">
+        <div class="date-input-wrap">
+          <span class="date-input-lbl">Datum</span>
+          <input type="date" id="admin-date" class="date-input"/>
+        </div>
+        <button class="csv-btn" id="csv-btn" onclick="exportCSV()" disabled>Export CSV</button>
+      </div>
+      <div class="admin-stats" id="admin-stats">—</div>
+      <div id="admin-list" style="display:flex;flex-direction:column;gap:10px"></div>
+    </div>
+  </div>
+
 </div><!-- /app -->
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ── State ──────────────────────────────────────────────
+// ════════════════════════════════════════════════════════
+// Supabase config
+// ════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://ojowaqxivoegmngkoztk.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qb3dhcXhpdm9lZ21uZ2tvenRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2ODczNTgsImV4cCI6MjA5NDI2MzM1OH0.XTzdUPUWvqpny4mVknaauGXt3olNC0Lyo-2pbQnVj8M';
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ════════════════════════════════════════════════════════
+// State
+// ════════════════════════════════════════════════════════
 const S = {
   inTime: null, inCoords: null,
   outTime: null, outCoords: null,
-  photos: [],
-  submissions: [],
+  photos: [],          // array of File objects (or { name, dataUrl } legacy)
   elapsedInterval: null,
+  profile: null,       // { id, company_id, role, full_name }
+  email: null,
+  currentRows: [],     // admin: rows currently shown
 };
 
-// ── Clock ──────────────────────────────────────────────
+// ════════════════════════════════════════════════════════
+// Init / auth flow
+// ════════════════════════════════════════════════════════
+(async function init() {
+  startClock();
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return showAuth();
+  await loadProfileAndRoute(session.user);
+})();
+
+sb.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_OUT') showAuth();
+});
+
+async function loadProfileAndRoute(authUser) {
+  const { data, error } = await sb.from('profiles').select('*').eq('id', authUser.id).single();
+  if (error || !data) {
+    showAuth();
+    showAuthError(error?.message || 'Profiel niet gevonden');
+    await sb.auth.signOut();
+    return;
+  }
+  S.profile = data;
+  S.email = authUser.email;
+  hideLoading();
+  if (data.role === 'worker') showWorker();
+  else showAdmin();
+}
+
+function showAuth() {
+  hideLoading();
+  document.getElementById('screen-auth').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('worker-views').style.display = 'none';
+  document.getElementById('admin-view').style.display = 'none';
+}
+
+function hideLoading() {
+  document.getElementById('loading-overlay').style.display = 'none';
+}
+
+function showWorker() {
+  document.getElementById('screen-auth').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('worker-views').style.display = 'block';
+  document.getElementById('admin-view').style.display = 'none';
+  document.getElementById('status-pill').style.display = 'flex';
+  document.getElementById('role-pill').style.display = 'none';
+
+  // Prefill name from profile
+  if (S.profile.full_name) {
+    document.getElementById('naam').value = S.profile.full_name;
+  }
+  // Profile screen
+  document.getElementById('me-name').textContent = S.profile.full_name || '—';
+  document.getElementById('me-email').textContent = S.email || '—';
+  document.getElementById('me-role').textContent = S.profile.role;
+
+  updateOverview();
+  loadLogbookToday();
+}
+
+function showAdmin() {
+  document.getElementById('screen-auth').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('worker-views').style.display = 'none';
+  document.getElementById('admin-view').style.display = 'block';
+  document.getElementById('status-pill').style.display = 'none';
+  const rolePill = document.getElementById('role-pill');
+  rolePill.style.display = '';
+  rolePill.textContent = S.profile.role === 'superuser' ? 'Superuser' : 'Admin';
+
+  const today = isoDate(new Date());
+  const dateInput = document.getElementById('admin-date');
+  dateInput.value = today;
+  dateInput.onchange = () => loadDashboard(dateInput.value);
+  loadDashboard(today);
+}
+
+async function doLogin() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pass = document.getElementById('auth-password').value;
+  if (!email || !pass) return;
+
+  const btn = document.getElementById('auth-btn');
+  const lbl = document.getElementById('auth-btn-label');
+  btn.disabled = true;
+  lbl.innerHTML = '<div class="spinner"></div>';
+  hideAuthError();
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) {
+    btn.disabled = false;
+    lbl.textContent = 'Inloggen';
+    showAuthError(translateAuthError(error.message));
+    return;
+  }
+  lbl.textContent = 'Inloggen';
+  btn.disabled = false;
+  document.getElementById('auth-password').value = '';
+  await loadProfileAndRoute(data.user);
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  S.profile = null; S.email = null;
+  resetWorkerState();
+  showAuth();
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+function hideAuthError() {
+  document.getElementById('auth-error').classList.remove('show');
+}
+function translateAuthError(msg) {
+  if (/invalid login/i.test(msg)) return 'E-mail of wachtwoord onjuist';
+  if (/email not confirmed/i.test(msg)) return 'E-mail nog niet bevestigd';
+  return msg;
+}
+
+// ════════════════════════════════════════════════════════
+// Clock
+// ════════════════════════════════════════════════════════
+function startClock() {
+  setInterval(tick, 1000);
+  tick();
+}
 function tick() {
   const now = new Date();
   document.getElementById('hero-time').textContent =
     now.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
   document.getElementById('hero-date').textContent =
     now.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  updateOverview();
+  if (S.profile && S.profile.role === 'worker') updateOverview();
 }
-setInterval(tick, 1000);
-tick();
 
-// ── Elapsed timer ──────────────────────────────────────
+// ════════════════════════════════════════════════════════
+// Elapsed / totals
+// ════════════════════════════════════════════════════════
 function startElapsed() {
   if (S.elapsedInterval) clearInterval(S.elapsedInterval);
   S.elapsedInterval = setInterval(() => {
@@ -606,7 +1139,6 @@ function startElapsed() {
     el.style.display = '';
   }, 1000);
 }
-
 function calcTotaal(inT, outT) {
   const diff = outT - inT;
   const h = Math.floor(diff / 3600000);
@@ -614,15 +1146,25 @@ function calcTotaal(inT, outT) {
   return `${h}u ${m}m`;
 }
 
-// ── Format helpers ─────────────────────────────────────
+// ════════════════════════════════════════════════════════
+// Format helpers
+// ════════════════════════════════════════════════════════
 function fmt(d) {
   return d.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
 }
 function fmtCoords(c) {
   return `${c.lat.toFixed(4)}, ${c.lng.toFixed(4)} (±${c.acc}m)`;
 }
+function isoDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 
-// ── GPS ───────────────────────────────────────────────
+// ════════════════════════════════════════════════════════
+// GPS with retry
+// ════════════════════════════════════════════════════════
 function getGPS() {
   return new Promise((res, rej) => {
     if (!navigator.geolocation) { rej(new Error('GPS niet beschikbaar')); return; }
@@ -655,7 +1197,9 @@ function getGPS() {
   });
 }
 
-// ── Punch ─────────────────────────────────────────────
+// ════════════════════════════════════════════════════════
+// Punch
+// ════════════════════════════════════════════════════════
 async function handlePunch(type) {
   const tile = document.getElementById('tile-' + type);
   if (tile.classList.contains('done')) return;
@@ -676,20 +1220,16 @@ async function handlePunch(type) {
       document.getElementById('time-in').textContent = fmt(now);
       document.getElementById('time-in').style.color = 'var(--ink-2)';
 
-      // enable out tile
       const tileOut = document.getElementById('tile-out');
       tileOut.removeAttribute('disabled');
       tileOut.className = 'action-tile primary-out';
 
-      // GPS display
       document.getElementById('gps-row').style.display = '';
       document.getElementById('gps-in-row').style.display = '';
       document.getElementById('gps-in-val').textContent = fmtCoords(coords);
 
-      // status
       setStatus('active');
       startElapsed();
-
       toast('Ingecheckt — ' + fmt(now));
 
     } else {
@@ -699,11 +1239,9 @@ async function handlePunch(type) {
       tile.className = 'action-tile done';
       document.getElementById('time-out').textContent = fmt(now);
 
-      // GPS
       document.getElementById('gps-out-row').style.display = '';
       document.getElementById('gps-out-val').textContent = fmtCoords(coords);
 
-      // elapsed → totaal
       clearInterval(S.elapsedInterval);
       document.getElementById('elapsed-display').style.display = 'none';
       const totaal = calcTotaal(S.inTime, S.outTime);
@@ -713,7 +1251,6 @@ async function handlePunch(type) {
       document.getElementById('sum-totaal-row').style.display = '';
       document.getElementById('sum-totaal').textContent = totaal;
 
-      // status
       setStatus('done');
       toast('Uitgecheckt — ' + fmt(now));
     }
@@ -729,7 +1266,6 @@ async function handlePunch(type) {
   }
 }
 
-// ── Status ────────────────────────────────────────────
 function setStatus(state) {
   const dot = document.getElementById('status-dot');
   const lbl = document.getElementById('status-label');
@@ -739,10 +1275,15 @@ function setStatus(state) {
   else lbl.textContent = 'Niet ingecheckt';
 }
 
-// ── Overview ──────────────────────────────────────────
+// ════════════════════════════════════════════════════════
+// Overview
+// ════════════════════════════════════════════════════════
 function updateOverview() {
-  const naam = document.getElementById('naam').value.trim();
-  const werk = document.getElementById('werk').value.trim();
+  const naamEl = document.getElementById('naam');
+  const werkEl = document.getElementById('werk');
+  if (!naamEl) return;
+  const naam = naamEl.value.trim();
+  const werk = werkEl.value.trim();
 
   setSumVal('sum-naam', naam);
   setSumVal('sum-werk', werk);
@@ -750,28 +1291,30 @@ function updateOverview() {
   setSumVal('sum-out', S.outTime ? fmt(S.outTime) : null);
   updateSubmit();
 }
-
 function setSumVal(id, val) {
   const el = document.getElementById(id);
   if (val) { el.textContent = val; el.className = 'sum-val'; }
   else { el.textContent = '—'; el.className = 'sum-val empty'; }
 }
-
 function updateSubmit() {
-  const naam = document.getElementById('naam').value.trim();
+  const naamEl = document.getElementById('naam');
+  if (!naamEl) return;
+  const naam = naamEl.value.trim();
   document.getElementById('submit-btn').disabled = !(naam && S.inTime);
 }
 
 document.getElementById('naam').addEventListener('input', updateOverview);
 document.getElementById('werk').addEventListener('input', updateOverview);
 
-// ── Photos ────────────────────────────────────────────
+// ════════════════════════════════════════════════════════
+// Photos
+// ════════════════════════════════════════════════════════
 function handlePhotos(e) {
   const files = Array.from(e.target.files);
   files.forEach(file => {
     const reader = new FileReader();
     reader.onload = ev => {
-      S.photos.push(ev.target.result);
+      S.photos.push({ file, dataUrl: ev.target.result });
       renderPhotos();
     };
     reader.readAsDataURL(file);
@@ -801,9 +1344,9 @@ function renderPhotos() {
   count.style.display = '';
 
   let html = '<div class="photo-strip">';
-  S.photos.forEach((src, i) => {
+  S.photos.forEach((p, i) => {
     html += `<div class="photo-thumb">
-      <img src="${src}" alt="Foto ${i+1}"/>
+      <img src="${p.dataUrl}" alt="Foto ${i+1}"/>
       <button class="photo-remove-btn" onclick="removePhoto(${i})">×</button>
     </div>`;
   });
@@ -814,91 +1357,292 @@ function renderPhotos() {
   area.innerHTML = html;
 }
 
-// ── Submit ────────────────────────────────────────────
-function doSubmit() {
+// ════════════════════════════════════════════════════════
+// Submit → Supabase
+// ════════════════════════════════════════════════════════
+async function doSubmit() {
   const naam = document.getElementById('naam').value.trim();
   const werk = document.getElementById('werk').value.trim();
-  if (!naam || !S.inTime) return;
+  if (!naam || !S.inTime || !S.profile) return;
 
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
-  document.getElementById('submit-label').textContent = 'Bezig…';
-  document.getElementById('submit-icon').outerHTML =
-    `<div class="submit-circle"><div class="spinner"></div></div>`;
+  document.getElementById('submit-label').textContent = 'Opslaan…';
+  const icon = document.getElementById('submit-icon');
+  if (icon) {
+    icon.outerHTML = `<div class="submit-circle"><div class="spinner"></div></div>`;
+  }
+
+  const today = isoDate(new Date());
+  const payload = {
+    user_id: S.profile.id,
+    company_id: S.profile.company_id,
+    full_name: naam,
+    project_name: werk || null,
+    check_in_time: fmt(S.inTime),
+    check_in_lat: S.inCoords?.lat ?? null,
+    check_in_lng: S.inCoords?.lng ?? null,
+    check_in_acc: S.inCoords?.acc ?? null,
+    check_out_time: S.outTime ? fmt(S.outTime) : null,
+    check_out_lat: S.outCoords?.lat ?? null,
+    check_out_lng: S.outCoords?.lng ?? null,
+    check_out_acc: S.outCoords?.acc ?? null,
+    notes: document.getElementById('commentaar').value.trim() || null,
+    date: today,
+    total_hours: S.outTime ? calcTotaal(S.inTime, S.outTime) : null,
+  };
+
+  // 1. Insert row
+  const { data: row, error } = await sb
+    .from('registrations')
+    .insert(payload)
+    .select()
+    .single();
+
+  if (error) {
+    toast('Opslaan mislukt: ' + error.message);
+    document.getElementById('submit-label').textContent = 'Verstuur dagrapport';
+    btn.disabled = false;
+    return;
+  }
+
+  // 2. Upload photos
+  const urls = [];
+  for (let i = 0; i < S.photos.length; i++) {
+    const p = S.photos[i];
+    const ext = (p.file.name.split('.').pop() || 'jpg').toLowerCase();
+    const path = `${S.profile.id}/${today}/${row.id}_${i}.${ext}`;
+    const { error: upErr } = await sb.storage
+      .from('werkfotos')
+      .upload(path, p.file, { contentType: p.file.type || 'image/jpeg', upsert: false });
+    if (upErr) { console.warn('photo upload failed', upErr); continue; }
+    const { data: pub } = sb.storage.from('werkfotos').getPublicUrl(path);
+    if (pub?.publicUrl) urls.push(pub.publicUrl);
+  }
+
+  // 3. Patch row with photo_urls
+  if (urls.length) {
+    const { error: updErr } = await sb
+      .from('registrations')
+      .update({ photo_urls: urls })
+      .eq('id', row.id);
+    if (updErr) console.warn('photo_urls update failed', updErr);
+  }
+
+  toast('Dagrapport verstuurd');
+  document.getElementById('submit-label').textContent = 'Verstuurd';
 
   setTimeout(() => {
-    const entry = {
-      ts: new Date().toISOString(),
-      naam, werk,
-      inTime: fmt(S.inTime),
-      inCoords: S.inCoords ? fmtCoords(S.inCoords) : '—',
-      outTime: S.outTime ? fmt(S.outTime) : '—',
-      outCoords: S.outCoords ? fmtCoords(S.outCoords) : '—',
-      commentaar: document.getElementById('commentaar').value.trim(),
-      photos: S.photos.length,
-      totaal: S.outTime ? calcTotaal(S.inTime, S.outTime) : '—',
-    };
-    S.submissions.push(entry);
-
-    try {
-      const all = JSON.parse(localStorage.getItem('cs-log') || '[]');
-      all.push(entry);
-      localStorage.setItem('cs-log', JSON.stringify(all));
-    } catch(e) {}
-
-    renderLog();
-    toast('Dagrapport verstuurd');
-
-    document.getElementById('submit-label').textContent = 'Verstuurd';
-    setTimeout(() => {
-      document.getElementById('submit-label').textContent = 'Verstuur dagrapport';
-      btn.disabled = false;
-    }, 3000);
-  }, 1200);
+    resetWorkerState();
+    document.getElementById('submit-label').textContent = 'Verstuur dagrapport';
+    loadLogbookToday();
+  }, 2200);
 }
 
-// ── Log ───────────────────────────────────────────────
-function renderLog() {
+function resetWorkerState() {
+  S.inTime = null; S.inCoords = null;
+  S.outTime = null; S.outCoords = null;
+  S.photos = [];
+  if (S.elapsedInterval) clearInterval(S.elapsedInterval);
+
+  const commentEl = document.getElementById('commentaar');
+  const werkEl = document.getElementById('werk');
+  if (commentEl) commentEl.value = '';
+  if (werkEl) werkEl.value = '';
+
+  const tIn = document.getElementById('tile-in');
+  const tOut = document.getElementById('tile-out');
+  if (tIn) { tIn.className = 'action-tile primary-in'; document.getElementById('time-in').textContent = '—  :  —'; document.getElementById('time-in').style.color = ''; }
+  if (tOut) { tOut.className = 'action-tile'; tOut.setAttribute('disabled', ''); document.getElementById('time-out').textContent = '—  :  —'; }
+
+  document.getElementById('gps-row').style.display = 'none';
+  document.getElementById('gps-in-row').style.display = 'none';
+  document.getElementById('gps-out-row').style.display = 'none';
+  document.getElementById('elapsed-display').style.display = 'none';
+  document.getElementById('totaal-display').style.display = 'none';
+  document.getElementById('sum-totaal-row').style.display = 'none';
+
+  // Re-inject submit icon
+  const wrap = document.querySelector('.submit-circle');
+  if (wrap) wrap.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="submit-icon"><path d="M5 12.5 10 17.5 19.5 7.5"/></svg>`;
+
+  renderPhotos();
+  setStatus('idle');
+  updateOverview();
+}
+
+// ════════════════════════════════════════════════════════
+// Logbook (worker, today only)
+// ════════════════════════════════════════════════════════
+async function loadLogbookToday() {
+  const today = isoDate(new Date());
+  const { data, error } = await sb
+    .from('registrations')
+    .select('*')
+    .eq('user_id', S.profile.id)
+    .eq('date', today)
+    .order('created_at', { ascending: false });
+
   const screen = document.getElementById('screen-log');
   const empty = document.getElementById('log-empty');
-
-  if (S.submissions.length === 0) { empty.style.display = ''; return; }
-  empty.style.display = 'none';
-
-  // Remove old entries
   Array.from(screen.querySelectorAll('.log-entry')).forEach(el => el.remove());
 
-  S.submissions.forEach(e => {
+  if (error || !data || data.length === 0) {
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  data.forEach(e => {
     const div = document.createElement('div');
     div.className = 'log-entry';
+    const ts = new Date(e.created_at).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
     div.innerHTML = `
       <div class="log-entry-head">
-        <span class="log-entry-name">${e.naam}</span>
-        <span class="log-entry-ts">${new Date(e.ts).toLocaleTimeString('nl-NL', {hour:'2-digit',minute:'2-digit'})}</span>
+        <span class="log-entry-name">${escapeHtml(e.full_name || '—')}</span>
+        <span class="log-entry-ts">${ts}</span>
       </div>
       <div class="card no-pad" style="border:none;border-radius:0">
-        <div class="summary-row"><span class="sum-key">Project</span><span class="sum-val ${e.werk ? '' : 'empty'}">${e.werk || '—'}</span></div>
-        <div class="summary-row"><span class="sum-key">Inchecken</span><span class="sum-val">${e.inTime}</span></div>
-        ${e.outTime !== '—' ? `<div class="summary-row"><span class="sum-key">Uitchecken</span><span class="sum-val">${e.outTime}</span></div>` : ''}
-        ${e.totaal !== '—' ? `<div class="summary-row"><span class="sum-key">Totaal</span><span class="sum-val">${e.totaal}</span></div>` : ''}
-        ${e.commentaar ? `<div class="summary-row"><span class="sum-key">Opmerking</span><span class="sum-val" style="max-width:55%;text-align:right;font-size:13px">${e.commentaar}</span></div>` : ''}
-        <div class="summary-row" style="border-bottom:none"><span class="sum-key">Foto's</span><span class="sum-val ${e.photos ? '' : 'empty'}">${e.photos ? e.photos + ' toegevoegd' : 'Geen'}</span></div>
+        <div class="summary-row"><span class="sum-key">Project</span><span class="sum-val ${e.project_name ? '' : 'empty'}">${escapeHtml(e.project_name || '—')}</span></div>
+        <div class="summary-row"><span class="sum-key">Inchecken</span><span class="sum-val">${escapeHtml(e.check_in_time || '—')}</span></div>
+        ${e.check_out_time ? `<div class="summary-row"><span class="sum-key">Uitchecken</span><span class="sum-val">${escapeHtml(e.check_out_time)}</span></div>` : ''}
+        ${e.total_hours ? `<div class="summary-row"><span class="sum-key">Totaal</span><span class="sum-val">${escapeHtml(e.total_hours)}</span></div>` : ''}
+        ${e.notes ? `<div class="summary-row"><span class="sum-key">Opmerking</span><span class="sum-val" style="max-width:55%;text-align:right;font-size:13px;font-weight:400">${escapeHtml(e.notes)}</span></div>` : ''}
+        <div class="summary-row" style="border-bottom:none"><span class="sum-key">Foto's</span><span class="sum-val ${(e.photo_urls?.length) ? '' : 'empty'}">${(e.photo_urls?.length) ? e.photo_urls.length + ' toegevoegd' : 'Geen'}</span></div>
       </div>
     `;
     screen.appendChild(div);
   });
 }
 
-// ── Tabs ──────────────────────────────────────────────
+// ════════════════════════════════════════════════════════
+// Tabs (worker)
+// ════════════════════════════════════════════════════════
 function switchTab(tab) {
   ['today', 'log', 'me'].forEach(t => {
     document.getElementById('tab-' + t).className = 'tab-item' + (t === tab ? ' active' : '');
   });
   document.getElementById('screen-today').style.display = tab === 'today' ? 'flex' : 'none';
   document.getElementById('screen-log').style.display = tab === 'log' ? 'flex' : 'none';
+  document.getElementById('screen-me').style.display = tab === 'me' ? 'flex' : 'none';
+  if (tab === 'log') loadLogbookToday();
 }
 
-// ── Toast ─────────────────────────────────────────────
+// ════════════════════════════════════════════════════════
+// Admin dashboard
+// ════════════════════════════════════════════════════════
+async function loadDashboard(dateStr) {
+  const list = document.getElementById('admin-list');
+  const stats = document.getElementById('admin-stats');
+  list.innerHTML = '<div class="admin-empty">Laden…</div>';
+  stats.textContent = '';
+
+  const { data, error } = await sb
+    .from('registrations')
+    .select('*')
+    .eq('company_id', S.profile.company_id)
+    .eq('date', dateStr)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    list.innerHTML = `<div class="admin-empty">Fout: ${escapeHtml(error.message)}</div>`;
+    document.getElementById('csv-btn').disabled = true;
+    return;
+  }
+
+  S.currentRows = data || [];
+  document.getElementById('csv-btn').disabled = S.currentRows.length === 0;
+
+  if (S.currentRows.length === 0) {
+    list.innerHTML = '<div class="admin-empty">Geen registraties op deze datum</div>';
+    stats.textContent = '0 registraties';
+    return;
+  }
+  stats.textContent = `${S.currentRows.length} registratie${S.currentRows.length === 1 ? '' : 's'}`;
+
+  list.innerHTML = '';
+  S.currentRows.forEach(r => list.appendChild(renderRegCard(r)));
+}
+
+function renderRegCard(r) {
+  const card = document.createElement('div');
+  card.className = 'reg-card';
+  const inGps  = r.check_in_lat != null  ? `${r.check_in_lat.toFixed(4)}, ${r.check_in_lng.toFixed(4)} (±${r.check_in_acc || '?'}m)` : '—';
+  const outGps = r.check_out_lat != null ? `${r.check_out_lat.toFixed(4)}, ${r.check_out_lng.toFixed(4)} (±${r.check_out_acc || '?'}m)` : '—';
+  const timesLine = (r.check_in_time || '—') + ' – ' + (r.check_out_time || '…');
+
+  card.innerHTML = `
+    <div class="reg-head">
+      <div>
+        <div class="reg-name">${escapeHtml(r.full_name || '—')}</div>
+        <div class="reg-project">${escapeHtml(r.project_name || 'Geen project')}</div>
+      </div>
+      <div>
+        <div class="reg-times">${escapeHtml(timesLine)}</div>
+        ${r.total_hours ? `<div class="reg-total">${escapeHtml(r.total_hours)}</div>` : ''}
+      </div>
+    </div>
+    <div class="reg-body">
+      <div class="reg-gps">
+        <div class="reg-gps-item"><span class="reg-gps-lbl">In</span><span class="reg-gps-val">${escapeHtml(inGps)}</span></div>
+        <div class="reg-gps-item"><span class="reg-gps-lbl">Uit</span><span class="reg-gps-val">${escapeHtml(outGps)}</span></div>
+      </div>
+      ${r.notes ? `<div class="reg-notes">${escapeHtml(r.notes)}</div>` : ''}
+    </div>
+    ${(r.photo_urls && r.photo_urls.length) ? `
+      <div class="reg-photos">
+        ${r.photo_urls.map(u => `<div class="reg-photo"><a href="${escapeAttr(u)}" target="_blank" rel="noopener"><img src="${escapeAttr(u)}" alt="Foto"/></a></div>`).join('')}
+      </div>
+    ` : ''}
+  `;
+  return card;
+}
+
+// ════════════════════════════════════════════════════════
+// CSV export
+// ════════════════════════════════════════════════════════
+function exportCSV() {
+  if (!S.currentRows || S.currentRows.length === 0) return;
+  const cols = [
+    'date','full_name','project_name',
+    'check_in_time','check_out_time','total_hours',
+    'check_in_lat','check_in_lng','check_in_acc',
+    'check_out_lat','check_out_lng','check_out_acc',
+    'notes','photo_urls','created_at'
+  ];
+  const header = cols.join(',');
+  const body = S.currentRows.map(r => cols.map(c => csvEscape(r[c])).join(',')).join('\n');
+  const csv = '﻿' + header + '\n' + body;
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `registraties_${document.getElementById('admin-date').value}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+}
+function csvEscape(v) {
+  if (v == null) return '';
+  const s = Array.isArray(v) ? v.join(' | ') : String(v);
+  if (/[,"\n\r;]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+  return s;
+}
+
+// ════════════════════════════════════════════════════════
+// Helpers
+// ════════════════════════════════════════════════════════
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+function escapeAttr(s) {
+  return escapeHtml(s);
+}
+
+// ════════════════════════════════════════════════════════
+// Toast
+// ════════════════════════════════════════════════════════
 function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
