@@ -626,11 +626,32 @@ function fmtCoords(c) {
 function getGPS() {
   return new Promise((res, rej) => {
     if (!navigator.geolocation) { rej(new Error('GPS niet beschikbaar')); return; }
-    navigator.geolocation.getCurrentPosition(
-      p => res({ lat: p.coords.latitude, lng: p.coords.longitude, acc: Math.round(p.coords.accuracy) }),
-      e => rej(new Error('GPS mislukt: ' + e.message)),
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
+
+    let best = null;
+    let attempts = 0;
+    const max = 3;
+
+    function tryOnce() {
+      navigator.geolocation.getCurrentPosition(
+        p => {
+          attempts++;
+          const result = {
+            lat: p.coords.latitude,
+            lng: p.coords.longitude,
+            acc: Math.round(p.coords.accuracy)
+          };
+          if (!best || result.acc < best.acc) best = result;
+          if (best.acc <= 30 || attempts >= max) {
+            res(best);
+          } else {
+            setTimeout(tryOnce, 1500);
+          }
+        },
+        e => rej(new Error('GPS mislukt: ' + e.message)),
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+      );
+    }
+    tryOnce();
   });
 }
 
