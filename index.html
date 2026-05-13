@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#ffffff"/>
+<title>CrowdStamp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --ink: #0f0f0f;
+  --ink-2: #3a3a3a;
+  --ink-3: #888;
+  --ink-4: #bbb;
+  --accent: #e8410a;
+  --good: #16a34a;
+  --bg: oklch(0.96 0.005 90);
+  --bg-2: oklch(0.93 0.005 90);
+  --line: rgba(0,0,0,0.09);
+  --line-2: rgba(0,0,0,0.14);
+  --white: #ffffff;
+}
+
+html,body{
+  height:100%;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app{
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  position: relative;
+}
+
+/* ── Hero ── */
+.hero{
+  background: var(--white);
+  padding: 18px 22px 22px;
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.hero-top{display:flex;align-items:center;justify-content:space-between}
+
+.wordmark{display:flex;align-items:center;gap:7px}
+.stamp-mark{flex-shrink:0}
+.wordmark-text{
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.035em;
+  color: var(--ink);
+}
+
+.status-pill{
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-3);
+  letter-spacing: -0.005em;
+}
+.status-dot{
+  width: 7px;height: 7px;
+  border-radius: 50%;
+  background: var(--ink-4);
+  transition: background 0.3s, box-shadow 0.3s;
+}
+.status-dot.active{background: var(--accent);box-shadow: 0 0 0 3px rgba(232,65,10,0.18)}
+.status-dot.done{background: var(--good);box-shadow: 0 0 0 3px rgba(22,163,74,0.18)}
+
+.hero-time-area{margin-top:18px}
+.hero-date{font-size:12px;color:var(--ink-3);letter-spacing:-0.005em;margin-bottom:4px}
+.hero-time{
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 600;
+  font-size: 52px;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+/* ── Scrollable content ── */
+.scroll-body{
+  flex: 1;
+  padding: 14px 14px 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+/* ── Section ── */
+.section-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px 8px;
+}
+.section-head-left{display:flex;align-items:center;gap:8px;color:var(--ink-2)}
+.section-head-title{font-size:13px;font-weight:600;letter-spacing:-0.01em;color:var(--ink)}
+.section-meta{font-size:12px;color:var(--ink-3);font-weight:600;letter-spacing:-0.005em}
+.section-meta.accent{color:var(--accent)}
+.section-meta.good{color:var(--good)}
+
+/* ── Card ── */
+.card{
+  background: var(--white);
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  padding: 14px 16px;
+}
+.card.no-pad{padding: 0}
+
+/* ── Fields ── */
+.field{
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.field:last-child{padding-bottom:0;margin-bottom:0;border-bottom:none}
+.field-label{font-size:11px;font-weight:500;color:var(--ink-3);margin-bottom:4px;letter-spacing:-0.005em}
+.field-input{
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -0.015em;
+  padding: 0;
+  caret-color: var(--accent);
+}
+.field-input::placeholder{color:var(--ink-4);font-weight:400}
+.field-input:focus{outline:none}
+textarea.field-input{
+  resize: none;
+  line-height: 1.5;
+  min-height: 76px;
+  font-size: 14.5px;
+}
+
+/* ── Time actions ── */
+.time-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.action-tile{
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--line);
+  background: var(--white);
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.action-tile:active:not(.done):not([disabled]){transform:scale(0.97)}
+.action-tile.primary-in{background:var(--accent);border-color:transparent;color:white}
+.action-tile.primary-out{background:var(--ink);border-color:transparent;color:white}
+.action-tile.done{background:var(--bg-2);border-color:var(--line)}
+.action-tile[disabled]{opacity:0.4;cursor:not-allowed}
+.tile-top{display:flex;align-items:center;justify-content:space-between}
+.tile-label{font-size:14px;font-weight:600;letter-spacing:-0.015em}
+.tile-time{
+  font-family:'Inter Tight',sans-serif;
+  font-size:13px;font-weight:500;
+  font-variant-numeric:tabular-nums;
+  letter-spacing:-0.005em;
+  color: var(--ink-3);
+}
+.action-tile.primary-in .tile-time,
+.action-tile.primary-out .tile-time{color:rgba(255,255,255,0.7)}
+.action-tile.done .tile-time{color:var(--ink-2)}
+
+/* ── GPS ── */
+.gps-row{
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--ink-3);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.gps-item{display:flex;gap:6px;align-items:baseline}
+.gps-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-4);min-width:44px}
+.gps-val{font-family:'Inter Tight',sans-serif;font-weight:500;color:var(--ink-2);font-variant-numeric:tabular-nums}
+
+/* ── Foto ── */
+.upload-btn{
+  all: unset;
+  cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px dashed var(--line-2);
+  border-radius: 12px;
+  padding: 16px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--ink-2);
+  background: var(--bg-2);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  transition: background 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.upload-btn:active{background: var(--line);border-color:var(--ink-3)}
+#photo-input{display:none}
+
+.photo-strip{display:flex;gap:8px;flex-wrap:wrap}
+.photo-thumb{
+  width: calc(33.33% - 6px);
+  aspect-ratio: 1/1;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid var(--line);
+}
+.photo-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-remove-btn{
+  position: absolute;
+  top: 4px; right: 4px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.55);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.add-more-tile{
+  width: calc(33.33% - 6px);
+  aspect-ratio: 1/1;
+  border-radius: 10px;
+  border: 1px dashed var(--line-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-3);
+  background: var(--bg-2);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Summary rows ── */
+.summary-row{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.summary-row:last-child{border-bottom:none}
+.sum-key{font-size:14px;color:var(--ink-3);letter-spacing:-0.012em}
+.sum-val{
+  font-size:14px;font-weight:600;
+  color:var(--ink);font-variant-numeric:tabular-nums;
+  letter-spacing:-0.01em;
+}
+.sum-val.empty{color:var(--ink-4);font-weight:400}
+
+/* ── Submit ── */
+.submit-wrap{padding: 0 14px;margin-top: -4px}
+.submit-btn{
+  all: unset;
+  cursor: pointer;
+  box-sizing: border-box;
+  width: 100%;
+  background: var(--ink);
+  color: white;
+  border-radius: 14px;
+  padding: 15px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: opacity 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.submit-btn:active:not([disabled]){transform:scale(0.98)}
+.submit-btn[disabled]{opacity:0.3;cursor:not-allowed}
+.submit-btn-label{font-size:15px;font-weight:600;letter-spacing:-0.02em}
+.submit-circle{
+  width:28px;height:28px;border-radius:50%;
+  background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+
+/* ── Tab bar ── */
+.tab-bar{
+  position: fixed;
+  bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 430px;
+  border-top: 1px solid var(--line);
+  background: var(--white);
+  padding: 8px 24px max(22px, env(safe-area-inset-bottom));
+  display: flex;
+  justify-content: space-around;
+  z-index: 50;
+}
+.tab-item{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  color: var(--ink-4);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.tab-item.active{color:var(--ink)}
+.tab-label{font-size:10.5px;font-weight:600;letter-spacing:-0.005em}
+
+/* ── Log screen ── */
+.log-screen{display:none;flex-direction:column;gap:12px;padding:14px 14px 120px}
+.log-entry{
+  background:var(--white);
+  border-radius:16px;
+  border:1px solid var(--line);
+  overflow:hidden;
+}
+.log-entry-head{
+  padding:12px 16px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.log-entry-name{font-size:14px;font-weight:600;letter-spacing:-0.015em;color:var(--ink)}
+.log-entry-ts{font-size:11px;color:var(--ink-3)}
+.log-empty{padding:48px 24px;text-align:center;color:var(--ink-3);font-size:14px}
+
+/* ── Toast ── */
+.toast{
+  position:fixed;
+  bottom:calc(80px + env(safe-area-inset-bottom));
+  left:50%;transform:translateX(-50%) translateY(60px);
+  background:var(--ink);color:white;
+  padding:9px 18px;border-radius:20px;
+  font-size:13px;font-weight:500;
+  z-index:200;white-space:nowrap;
+  transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  pointer-events:none;
+}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ── Spinner ── */
+.spinner{
+  width:14px;height:14px;border-radius:50%;
+  border:2px solid rgba(255,255,255,0.3);
+  border-top-color:#fff;
+  animation:spin 0.7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Elapsed timer ── */
+.elapsed{
+  font-family:'Inter Tight',sans-serif;
+  font-variant-numeric:tabular-nums;
+  font-size:12px;font-weight:600;
+  letter-spacing:-0.005em;
+}
+
+/* ── Icons (inline SVG helpers) ── */
+svg{display:block}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-top">
+      <div class="wordmark">
+        <!-- Stamp mark logo -->
+        <svg class="stamp-mark" viewBox="0 0 24 24" width="22" height="22">
+          <rect x="2" y="2" width="20" height="20" rx="5.5" fill="var(--ink)"/>
+          <rect x="7.5" y="7.5" width="9" height="9" rx="2.2" fill="white"/>
+          <circle cx="12" cy="12" r="1.6" fill="var(--ink)"/>
+        </svg>
+        <span class="wordmark-text">crowdstamp</span>
+      </div>
+      <div class="status-pill">
+        <div class="status-dot" id="status-dot"></div>
+        <span id="status-label">Niet ingecheckt</span>
+      </div>
+    </div>
+    <div class="hero-time-area">
+      <div class="hero-date" id="hero-date">—</div>
+      <div class="hero-time" id="hero-time">--:--</div>
+    </div>
+  </div>
+
+  <!-- TODAY SCREEN -->
+  <div class="scroll-body" id="screen-today">
+
+    <!-- Project -->
+    <div>
+      <div class="section-head">
+        <div class="section-head-left">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="7.5" width="17" height="12" rx="1.5"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5"/></svg>
+          <span class="section-head-title">Project</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="field">
+          <div class="field-label">Naam onderaannemer</div>
+          <input class="field-input" id="naam" type="text" placeholder="Naam invullen" autocomplete="name"/>
+        </div>
+        <div class="field">
+          <div class="field-label">Projectnaam / locatie</div>
+          <input class="field-input" id="werk" type="text" placeholder="Locatie invullen"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tijdregistratie -->
+    <div>
+      <div class="section-head">
+        <div class="section-head-left">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg>
+          <span class="section-head-title">Tijdregistratie</span>
+        </div>
+        <span class="section-meta accent elapsed" id="elapsed-display" style="display:none"></span>
+        <span class="section-meta good" id="totaal-display" style="display:none"></span>
+      </div>
+      <div class="card">
+        <div class="time-grid">
+          <!-- Inchecken -->
+          <div class="action-tile primary-in" id="tile-in" onclick="handlePunch('in')">
+            <div class="tile-top">
+              <span class="tile-label">Inchecken</span>
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" id="icon-in"><path d="M11 4H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/><path d="M14 8l4 4-4 4M18 12H10"/></svg>
+            </div>
+            <div class="tile-time" id="time-in">—  :  —</div>
+          </div>
+          <!-- Uitchecken -->
+          <div class="action-tile" id="tile-out" disabled onclick="handlePunch('out')">
+            <div class="tile-top">
+              <span class="tile-label">Uitchecken</span>
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" id="icon-out"><path d="M13 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M10 8l-4 4 4 4M6 12h8"/></svg>
+            </div>
+            <div class="tile-time" id="time-out">—  :  —</div>
+          </div>
+        </div>
+        <!-- GPS -->
+        <div class="gps-row" id="gps-row" style="display:none">
+          <div class="gps-item" id="gps-in-row" style="display:none">
+            <span class="gps-lbl">Start</span>
+            <span class="gps-val" id="gps-in-val">—</span>
+          </div>
+          <div class="gps-item" id="gps-out-row" style="display:none">
+            <span class="gps-lbl">Einde</span>
+            <span class="gps-val" id="gps-out-val">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Foto -->
+    <div>
+      <div class="section-head">
+        <div class="section-head-left">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.7-2h6.6L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.2"/></svg>
+          <span class="section-head-title">Foto</span>
+        </div>
+        <span class="section-meta" id="foto-count" style="display:none"></span>
+      </div>
+      <div class="card">
+        <input type="file" id="photo-input" accept="image/*" capture="environment" multiple onchange="handlePhotos(event)"/>
+        <div id="photo-area">
+          <button class="upload-btn" onclick="document.getElementById('photo-input').click()">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            Foto toevoegen
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Opmerkingen -->
+    <div>
+      <div class="section-head">
+        <div class="section-head-left">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5h14v10H9l-4 4Z"/></svg>
+          <span class="section-head-title">Opmerkingen</span>
+        </div>
+      </div>
+      <div class="card">
+        <textarea class="field-input" id="commentaar" placeholder="Bijzonderheden, materialen, meerwerk…"></textarea>
+      </div>
+    </div>
+
+    <!-- Overzicht -->
+    <div>
+      <div class="section-head">
+        <div class="section-head-left">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M5 12h14M5 17h9"/></svg>
+          <span class="section-head-title">Overzicht</span>
+        </div>
+      </div>
+      <div class="card no-pad">
+        <div class="summary-row"><span class="sum-key">Naam</span><span class="sum-val empty" id="sum-naam">—</span></div>
+        <div class="summary-row"><span class="sum-key">Project</span><span class="sum-val empty" id="sum-werk">—</span></div>
+        <div class="summary-row"><span class="sum-key">Inchecken</span><span class="sum-val empty" id="sum-in">—</span></div>
+        <div class="summary-row"><span class="sum-key">Uitchecken</span><span class="sum-val empty" id="sum-out">—</span></div>
+        <div class="summary-row" id="sum-totaal-row" style="display:none"><span class="sum-key">Totaal</span><span class="sum-val" id="sum-totaal">—</span></div>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="submit-wrap">
+      <button class="submit-btn" id="submit-btn" disabled onclick="doSubmit()">
+        <span class="submit-btn-label" id="submit-label">Verstuur dagrapport</span>
+        <div class="submit-circle">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="submit-icon"><path d="M5 12.5 10 17.5 19.5 7.5"/></svg>
+        </div>
+      </button>
+    </div>
+
+  </div><!-- /screen-today -->
+
+  <!-- LOG SCREEN -->
+  <div class="log-screen" id="screen-log">
+    <div class="log-empty" id="log-empty">Nog geen registraties vandaag</div>
+  </div>
+
+  <!-- TAB BAR -->
+  <div class="tab-bar">
+    <div class="tab-item active" id="tab-today" onclick="switchTab('today')">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg>
+      <span class="tab-label">Vandaag</span>
+    </div>
+    <div class="tab-item" id="tab-log" onclick="switchTab('log')">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M5 12h14M5 17h9"/></svg>
+      <span class="tab-label">Logboek</span>
+    </div>
+    <div class="tab-item" id="tab-me" onclick="switchTab('me')">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c1.5-3.5 4.5-5 7-5s5.5 1.5 7 5"/></svg>
+      <span class="tab-label">Mij</span>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────
+const S = {
+  inTime: null, inCoords: null,
+  outTime: null, outCoords: null,
+  photos: [],
+  submissions: [],
+  elapsedInterval: null,
+};
+
+// ── Clock ──────────────────────────────────────────────
+function tick() {
+  const now = new Date();
+  document.getElementById('hero-time').textContent =
+    now.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+  document.getElementById('hero-date').textContent =
+    now.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  updateOverview();
+}
+setInterval(tick, 1000);
+tick();
+
+// ── Elapsed timer ──────────────────────────────────────
+function startElapsed() {
+  if (S.elapsedInterval) clearInterval(S.elapsedInterval);
+  S.elapsedInterval = setInterval(() => {
+    if (!S.inTime || S.outTime) return;
+    const diff = Date.now() - S.inTime.getTime();
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    const el = document.getElementById('elapsed-display');
+    el.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    el.style.display = '';
+  }, 1000);
+}
+
+function calcTotaal(inT, outT) {
+  const diff = outT - inT;
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  return `${h}u ${m}m`;
+}
+
+// ── Format helpers ─────────────────────────────────────
+function fmt(d) {
+  return d.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+}
+function fmtCoords(c) {
+  return `${c.lat.toFixed(4)}, ${c.lng.toFixed(4)} (±${c.acc}m)`;
+}
+
+// ── GPS ───────────────────────────────────────────────
+function getGPS() {
+  return new Promise((res, rej) => {
+    if (!navigator.geolocation) { rej(new Error('GPS niet beschikbaar')); return; }
+    navigator.geolocation.getCurrentPosition(
+      p => res({ lat: p.coords.latitude, lng: p.coords.longitude, acc: Math.round(p.coords.accuracy) }),
+      e => rej(new Error('GPS mislukt: ' + e.message)),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  });
+}
+
+// ── Punch ─────────────────────────────────────────────
+async function handlePunch(type) {
+  const tile = document.getElementById('tile-' + type);
+  if (tile.classList.contains('done')) return;
+  if (tile.hasAttribute('disabled') && type === 'out') return;
+
+  tile.style.opacity = '0.5';
+  tile.style.pointerEvents = 'none';
+
+  try {
+    const coords = await getGPS();
+    const now = new Date();
+
+    if (type === 'in') {
+      S.inTime = now;
+      S.inCoords = coords;
+
+      tile.className = 'action-tile done';
+      document.getElementById('time-in').textContent = fmt(now);
+      document.getElementById('time-in').style.color = 'var(--ink-2)';
+
+      // enable out tile
+      const tileOut = document.getElementById('tile-out');
+      tileOut.removeAttribute('disabled');
+      tileOut.className = 'action-tile primary-out';
+
+      // GPS display
+      document.getElementById('gps-row').style.display = '';
+      document.getElementById('gps-in-row').style.display = '';
+      document.getElementById('gps-in-val').textContent = fmtCoords(coords);
+
+      // status
+      setStatus('active');
+      startElapsed();
+
+      toast('Ingecheckt — ' + fmt(now));
+
+    } else {
+      S.outTime = now;
+      S.outCoords = coords;
+
+      tile.className = 'action-tile done';
+      document.getElementById('time-out').textContent = fmt(now);
+
+      // GPS
+      document.getElementById('gps-out-row').style.display = '';
+      document.getElementById('gps-out-val').textContent = fmtCoords(coords);
+
+      // elapsed → totaal
+      clearInterval(S.elapsedInterval);
+      document.getElementById('elapsed-display').style.display = 'none';
+      const totaal = calcTotaal(S.inTime, S.outTime);
+      const td = document.getElementById('totaal-display');
+      td.textContent = 'Totaal ' + totaal;
+      td.style.display = '';
+      document.getElementById('sum-totaal-row').style.display = '';
+      document.getElementById('sum-totaal').textContent = totaal;
+
+      // status
+      setStatus('done');
+      toast('Uitgecheckt — ' + fmt(now));
+    }
+
+    updateOverview();
+    updateSubmit();
+
+  } catch(e) {
+    toast(e.message);
+  } finally {
+    tile.style.opacity = '';
+    tile.style.pointerEvents = '';
+  }
+}
+
+// ── Status ────────────────────────────────────────────
+function setStatus(state) {
+  const dot = document.getElementById('status-dot');
+  const lbl = document.getElementById('status-label');
+  dot.className = 'status-dot ' + state;
+  if (state === 'active') lbl.textContent = 'Ingecheckt — actief';
+  else if (state === 'done') lbl.textContent = 'Klaar voor verzending';
+  else lbl.textContent = 'Niet ingecheckt';
+}
+
+// ── Overview ──────────────────────────────────────────
+function updateOverview() {
+  const naam = document.getElementById('naam').value.trim();
+  const werk = document.getElementById('werk').value.trim();
+
+  setSumVal('sum-naam', naam);
+  setSumVal('sum-werk', werk);
+  setSumVal('sum-in', S.inTime ? fmt(S.inTime) : null);
+  setSumVal('sum-out', S.outTime ? fmt(S.outTime) : null);
+  updateSubmit();
+}
+
+function setSumVal(id, val) {
+  const el = document.getElementById(id);
+  if (val) { el.textContent = val; el.className = 'sum-val'; }
+  else { el.textContent = '—'; el.className = 'sum-val empty'; }
+}
+
+function updateSubmit() {
+  const naam = document.getElementById('naam').value.trim();
+  document.getElementById('submit-btn').disabled = !(naam && S.inTime);
+}
+
+document.getElementById('naam').addEventListener('input', updateOverview);
+document.getElementById('werk').addEventListener('input', updateOverview);
+
+// ── Photos ────────────────────────────────────────────
+function handlePhotos(e) {
+  const files = Array.from(e.target.files);
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      S.photos.push(ev.target.result);
+      renderPhotos();
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
+}
+
+function removePhoto(idx) {
+  S.photos.splice(idx, 1);
+  renderPhotos();
+}
+
+function renderPhotos() {
+  const area = document.getElementById('photo-area');
+  const count = document.getElementById('foto-count');
+
+  if (S.photos.length === 0) {
+    area.innerHTML = `<button class="upload-btn" onclick="document.getElementById('photo-input').click()">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      Foto toevoegen
+    </button>`;
+    count.style.display = 'none';
+    return;
+  }
+
+  count.textContent = S.photos.length + ' toegevoegd';
+  count.style.display = '';
+
+  let html = '<div class="photo-strip">';
+  S.photos.forEach((src, i) => {
+    html += `<div class="photo-thumb">
+      <img src="${src}" alt="Foto ${i+1}"/>
+      <button class="photo-remove-btn" onclick="removePhoto(${i})">×</button>
+    </div>`;
+  });
+  html += `<div class="add-more-tile" onclick="document.getElementById('photo-input').click()">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+  </div>`;
+  html += '</div>';
+  area.innerHTML = html;
+}
+
+// ── Submit ────────────────────────────────────────────
+function doSubmit() {
+  const naam = document.getElementById('naam').value.trim();
+  const werk = document.getElementById('werk').value.trim();
+  if (!naam || !S.inTime) return;
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  document.getElementById('submit-label').textContent = 'Bezig…';
+  document.getElementById('submit-icon').outerHTML =
+    `<div class="submit-circle"><div class="spinner"></div></div>`;
+
+  setTimeout(() => {
+    const entry = {
+      ts: new Date().toISOString(),
+      naam, werk,
+      inTime: fmt(S.inTime),
+      inCoords: S.inCoords ? fmtCoords(S.inCoords) : '—',
+      outTime: S.outTime ? fmt(S.outTime) : '—',
+      outCoords: S.outCoords ? fmtCoords(S.outCoords) : '—',
+      commentaar: document.getElementById('commentaar').value.trim(),
+      photos: S.photos.length,
+      totaal: S.outTime ? calcTotaal(S.inTime, S.outTime) : '—',
+    };
+    S.submissions.push(entry);
+
+    try {
+      const all = JSON.parse(localStorage.getItem('cs-log') || '[]');
+      all.push(entry);
+      localStorage.setItem('cs-log', JSON.stringify(all));
+    } catch(e) {}
+
+    renderLog();
+    toast('Dagrapport verstuurd');
+
+    document.getElementById('submit-label').textContent = 'Verstuurd';
+    setTimeout(() => {
+      document.getElementById('submit-label').textContent = 'Verstuur dagrapport';
+      btn.disabled = false;
+    }, 3000);
+  }, 1200);
+}
+
+// ── Log ───────────────────────────────────────────────
+function renderLog() {
+  const screen = document.getElementById('screen-log');
+  const empty = document.getElementById('log-empty');
+
+  if (S.submissions.length === 0) { empty.style.display = ''; return; }
+  empty.style.display = 'none';
+
+  // Remove old entries
+  Array.from(screen.querySelectorAll('.log-entry')).forEach(el => el.remove());
+
+  S.submissions.forEach(e => {
+    const div = document.createElement('div');
+    div.className = 'log-entry';
+    div.innerHTML = `
+      <div class="log-entry-head">
+        <span class="log-entry-name">${e.naam}</span>
+        <span class="log-entry-ts">${new Date(e.ts).toLocaleTimeString('nl-NL', {hour:'2-digit',minute:'2-digit'})}</span>
+      </div>
+      <div class="card no-pad" style="border:none;border-radius:0">
+        <div class="summary-row"><span class="sum-key">Project</span><span class="sum-val ${e.werk ? '' : 'empty'}">${e.werk || '—'}</span></div>
+        <div class="summary-row"><span class="sum-key">Inchecken</span><span class="sum-val">${e.inTime}</span></div>
+        ${e.outTime !== '—' ? `<div class="summary-row"><span class="sum-key">Uitchecken</span><span class="sum-val">${e.outTime}</span></div>` : ''}
+        ${e.totaal !== '—' ? `<div class="summary-row"><span class="sum-key">Totaal</span><span class="sum-val">${e.totaal}</span></div>` : ''}
+        ${e.commentaar ? `<div class="summary-row"><span class="sum-key">Opmerking</span><span class="sum-val" style="max-width:55%;text-align:right;font-size:13px">${e.commentaar}</span></div>` : ''}
+        <div class="summary-row" style="border-bottom:none"><span class="sum-key">Foto's</span><span class="sum-val ${e.photos ? '' : 'empty'}">${e.photos ? e.photos + ' toegevoegd' : 'Geen'}</span></div>
+      </div>
+    `;
+    screen.appendChild(div);
+  });
+}
+
+// ── Tabs ──────────────────────────────────────────────
+function switchTab(tab) {
+  ['today', 'log', 'me'].forEach(t => {
+    document.getElementById('tab-' + t).className = 'tab-item' + (t === tab ? ' active' : '');
+  });
+  document.getElementById('screen-today').style.display = tab === 'today' ? 'flex' : 'none';
+  document.getElementById('screen-log').style.display = tab === 'log' ? 'flex' : 'none';
+}
+
+// ── Toast ─────────────────────────────────────────────
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>
