@@ -62,8 +62,8 @@ exports.handler = async (event) => {
       mode: 'subscription',
       line_items: [{ price: priceId, quantity: 1 }],
       customer_email: email,
-      success_url: 'https://crowdstamp.nl/app?session_id={CHECKOUT_SESSION_ID}',
-      cancel_url: 'https://crowdstamp.nl/#pricing',
+      success_url: 'https://crowdstamp.netlify.app/app?session_id={CHECKOUT_SESSION_ID}',
+      cancel_url: 'https://crowdstamp.netlify.app/#pricing',
       metadata: { companyId: companyId || '', plan, email },
       subscription_data: {
         trial_period_days: 14,
