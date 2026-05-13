@@ -1,0 +1,8 @@
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Permissions-Policy = "geolocation=(self)"
+    X-Frame-Options = "DENY"
+
+[build]
+  publish = "."
