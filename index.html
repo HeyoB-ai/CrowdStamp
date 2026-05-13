@@ -777,6 +777,25 @@ svg{display:block}
   </div>
 </div>
 
+<!-- TRIAL EXPIRED SCREEN -->
+<div class="auth-screen" id="screen-trial-expired" style="display:none">
+  <div class="auth-card" style="text-align:center">
+    <div class="auth-logo">
+      <svg viewBox="0 0 24 24" width="26" height="26">
+        <rect x="2" y="2" width="20" height="20" rx="5.5" fill="#0f0f0f"/>
+        <rect x="7.5" y="7.5" width="9" height="9" rx="2.2" fill="white"/>
+        <circle cx="12" cy="12" r="1.6" fill="#0f0f0f"/>
+      </svg>
+      <span class="auth-logo-text">crowdstamp</span>
+    </div>
+    <div class="auth-title">Je proefperiode is verlopen</div>
+    <div class="auth-sub">Kies een abonnement om door te gaan met CrowdStamp.</div>
+    <a href="/#pricing" class="auth-btn" style="text-decoration:none">Bekijk abonnementen</a>
+    <a href="mailto:info@crowdstamp.nl" style="display:block;text-align:center;margin-top:14px;color:var(--ink-3);font-size:13px;font-weight:500;text-decoration:none;letter-spacing:-0.005em">Neem contact op</a>
+    <a href="#" onclick="event.preventDefault();doLogout()" style="display:block;text-align:center;margin-top:10px;color:var(--ink-4);font-size:12px;font-weight:500;text-decoration:none;letter-spacing:-0.005em">Uitloggen</a>
+  </div>
+</div>
+
 <!-- APP -->
 <div class="app" id="app" style="display:none">
 
@@ -1045,36 +1064,66 @@ async function loadProfileAndRoute(authUser) {
   }
   S.profile = data;
   S.email = authUser.email;
+
+  // Fetch company for trial-expiry check.
+  // Requires an RLS policy on `companies` that allows a member to read their own company row.
+  // If the read is blocked, we fail open (let the user in) rather than locking everyone out.
+  if (data.company_id) {
+    const { data: company } = await sb
+      .from('companies')
+      .select('plan, status, trial_ends_at')
+      .eq('id', data.company_id)
+      .single();
+    S.company = company || null;
+
+    if (company && company.plan === 'trial' && company.trial_ends_at) {
+      const endsAt = new Date(company.trial_ends_at);
+      if (!isNaN(endsAt.getTime()) && endsAt.getTime() < Date.now()) {
+        showTrialExpired();
+        return;
+      }
+    }
+  }
+
   hideLoading();
   if (data.role === 'worker') showWorker();
   else showAdmin();
 }
 
-function showAuth() {
-  hideLoading();
-  document.getElementById('screen-auth').style.display = 'flex';
+function hideAllScreens() {
+  document.getElementById('screen-auth').style.display = 'none';
+  document.getElementById('screen-trial-expired').style.display = 'none';
   document.getElementById('app').style.display = 'none';
   document.getElementById('worker-views').style.display = 'none';
   document.getElementById('admin-view').style.display = 'none';
+}
+
+function showAuth() {
+  hideLoading();
+  hideAllScreens();
+  document.getElementById('screen-auth').style.display = 'flex';
 }
 
 function hideLoading() {
   document.getElementById('loading-overlay').style.display = 'none';
 }
 
+function showTrialExpired() {
+  hideLoading();
+  hideAllScreens();
+  document.getElementById('screen-trial-expired').style.display = 'flex';
+}
+
 function showWorker() {
-  document.getElementById('screen-auth').style.display = 'none';
+  hideAllScreens();
   document.getElementById('app').style.display = 'flex';
   document.getElementById('worker-views').style.display = 'block';
-  document.getElementById('admin-view').style.display = 'none';
   document.getElementById('status-pill').style.display = 'flex';
   document.getElementById('role-pill').style.display = 'none';
 
-  // Prefill name from profile
   if (S.profile.full_name) {
     document.getElementById('naam').value = S.profile.full_name;
   }
-  // Profile screen
   document.getElementById('me-name').textContent = S.profile.full_name || '—';
   document.getElementById('me-email').textContent = S.email || '—';
   document.getElementById('me-role').textContent = S.profile.role;
@@ -1084,9 +1133,8 @@ function showWorker() {
 }
 
 function showAdmin() {
-  document.getElementById('screen-auth').style.display = 'none';
+  hideAllScreens();
   document.getElementById('app').style.display = 'flex';
-  document.getElementById('worker-views').style.display = 'none';
   document.getElementById('admin-view').style.display = 'block';
   document.getElementById('status-pill').style.display = 'none';
   const rolePill = document.getElementById('role-pill');

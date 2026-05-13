@@ -403,6 +403,149 @@ footer{
   section{padding:48px 0}
   .cta-dark{padding:44px 24px;margin:0 16px;border-radius:20px}
 }
+
+/* ── Signup modal ── */
+.modal-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.15s ease;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-card{
+  background: var(--white);
+  border-radius: 16px;
+  padding: 28px 24px;
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+  border: 1px solid var(--line);
+  animation: slideUp 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-close{
+  all: unset;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--bg-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--ink-2);
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.modal-close:hover{background:var(--line)}
+.modal-title{
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: -0.025em;
+  margin-bottom: 4px;
+  color: var(--ink);
+  line-height: 1.15;
+}
+.modal-sub{
+  font-size: 14px;
+  color: var(--ink-3);
+  margin-bottom: 18px;
+  letter-spacing: -0.005em;
+  line-height: 1.45;
+}
+.modal-field{
+  margin-bottom: 10px;
+  padding: 11px 14px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.modal-field-label{
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-4);
+  margin-bottom: 2px;
+}
+.modal-field input{
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -0.012em;
+  caret-color: var(--accent);
+}
+.modal-btn{
+  all: unset;
+  cursor: pointer;
+  box-sizing: border-box;
+  width: 100%;
+  background: var(--accent);
+  color: white;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  text-align: center;
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  transition: opacity 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.modal-btn:active:not([disabled]){transform:scale(0.98)}
+.modal-btn[disabled]{opacity:0.5;cursor:not-allowed}
+.modal-error{
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: rgba(232,65,10,0.08);
+  border: 1px solid rgba(232,65,10,0.2);
+  border-radius: 8px;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 500;
+  display: none;
+}
+.modal-error.show{display:block}
+.modal-success-icon{
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(22,163,74,0.1);
+  color: var(--good);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+.modal-spinner{
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -428,7 +571,7 @@ footer{
     <h1>Weet altijd wie er<br/>op locatie aan het werk is</h1>
     <p class="sub">CrowdStamp registreert aanwezigheid, locatie en voortgang van je onderaannemers, monteurs of medewerkers. Eén tik. Geen gedoe.</p>
     <div class="hero-actions">
-      <a href="/index.html" class="btn btn-primary">Gratis proberen</a>
+      <button type="button" onclick="openSignupModal()" class="btn btn-primary">Gratis proberen</button>
       <a href="#hoe" class="btn btn-outline">Bekijk demo</a>
     </div>
   </div>
@@ -579,14 +722,14 @@ footer{
         <div class="price-name">Groei</div>
         <div class="price-amount">€49<small>/maand</small></div>
         <div class="price-desc">Onbeperkt gebruikers, 3 projecten, CSV export, prioritaire support.</div>
-        <button type="button" onclick="startCheckout('growth')" class="btn btn-primary">Start 14 dagen gratis</button>
+        <button type="button" onclick="openSignupModal()" class="btn btn-primary">Start 14 dagen gratis</button>
       </div>
 
       <div class="price-card">
         <div class="price-name">Pro</div>
         <div class="price-amount">€99<small>/maand</small></div>
         <div class="price-desc">Onbeperkt alles, eigen logo, API-toegang, dedicated account manager.</div>
-        <button type="button" onclick="startCheckout('pro')" class="btn btn-outline">Start 14 dagen gratis</button>
+        <a href="mailto:info@crowdstamp.nl" class="btn btn-outline">Neem contact op</a>
       </div>
 
     </div>
@@ -598,7 +741,7 @@ footer{
   <div class="cta-dark">
     <h2>Klaar om te beginnen?</h2>
     <p class="sub">Probeer CrowdStamp 14 dagen gratis. Geen creditcard nodig.</p>
-    <a href="/index.html" class="btn btn-primary">Start gratis</a>
+    <button type="button" onclick="openSignupModal()" class="btn btn-primary">Start gratis</button>
   </div>
 </section>
 
@@ -621,30 +764,126 @@ footer{
   </div>
 </footer>
 
+<!-- SIGNUP MODAL -->
+<div class="modal-overlay" id="signup-modal" style="display:none">
+  <div class="modal-card">
+    <button class="modal-close" type="button" onclick="closeSignupModal()" aria-label="Sluiten">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6l-12 12"/></svg>
+    </button>
+
+    <div id="signup-form-state">
+      <h2 class="modal-title">Start je gratis proefperiode</h2>
+      <p class="modal-sub">14 dagen gratis. Geen creditcard nodig.</p>
+
+      <form id="signup-form" onsubmit="event.preventDefault();submitSignup()">
+        <div class="modal-field">
+          <div class="modal-field-label">Naam</div>
+          <input id="signup-name" type="text" placeholder="Jouw naam" autocomplete="name" required/>
+        </div>
+        <div class="modal-field">
+          <div class="modal-field-label">Bedrijfsnaam</div>
+          <input id="signup-company" type="text" placeholder="Naam van je bedrijf" autocomplete="organization" required/>
+        </div>
+        <div class="modal-field">
+          <div class="modal-field-label">E-mailadres</div>
+          <input id="signup-email" type="email" placeholder="jouw@email.nl" autocomplete="email" required/>
+        </div>
+
+        <button class="modal-btn" id="signup-submit" type="submit">
+          <span id="signup-submit-label">Account aanmaken</span>
+        </button>
+        <div class="modal-error" id="signup-error"></div>
+      </form>
+    </div>
+
+    <div id="signup-success-state" style="display:none;text-align:center">
+      <div class="modal-success-icon">
+        <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l5 5L19 7"/></svg>
+      </div>
+      <h2 class="modal-title">Gelukt!</h2>
+      <p class="modal-sub">Check je inbox voor de uitnodigingslink.</p>
+      <p class="modal-sub" style="margin-bottom:0">Je kunt direct inloggen via de link in je mail.</p>
+      <button class="modal-btn" type="button" onclick="closeSignupModal()" style="background:var(--ink);margin-top:22px">Sluiten</button>
+    </div>
+  </div>
+</div>
+
 <script>
-async function startCheckout(plan) {
-  const email = (window.prompt('E-mailadres voor je 14 dagen proef:') || '').trim();
-  if (!email) return;
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    alert('Voer een geldig e-mailadres in.');
+function openSignupModal() {
+  document.getElementById('signup-modal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  document.getElementById('signup-form-state').style.display = '';
+  document.getElementById('signup-success-state').style.display = 'none';
+  document.getElementById('signup-error').classList.remove('show');
+  setTimeout(() => document.getElementById('signup-name').focus(), 50);
+}
+
+function closeSignupModal() {
+  document.getElementById('signup-modal').style.display = 'none';
+  document.body.style.overflow = '';
+  document.getElementById('signup-name').value = '';
+  document.getElementById('signup-company').value = '';
+  document.getElementById('signup-email').value = '';
+  document.getElementById('signup-submit-label').textContent = 'Account aanmaken';
+  document.getElementById('signup-submit').disabled = false;
+}
+
+async function submitSignup() {
+  const name = document.getElementById('signup-name').value.trim();
+  const company_name = document.getElementById('signup-company').value.trim();
+  const email = document.getElementById('signup-email').value.trim();
+  const errorEl = document.getElementById('signup-error');
+  const submitBtn = document.getElementById('signup-submit');
+  const submitLabel = document.getElementById('signup-submit-label');
+
+  errorEl.classList.remove('show');
+
+  if (!name || !company_name || !email) {
+    errorEl.textContent = 'Vul alle velden in';
+    errorEl.classList.add('show');
     return;
   }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errorEl.textContent = 'Voer een geldig e-mailadres in';
+    errorEl.classList.add('show');
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitLabel.innerHTML = '<div class="modal-spinner"></div>';
+
   try {
-    const r = await fetch('/.netlify/functions/create-checkout', {
+    const r = await fetch('/.netlify/functions/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan, email }),
+      body: JSON.stringify({ name, company_name, email }),
     });
     const j = await r.json().catch(() => ({}));
-    if (!r.ok || !j.url) {
-      alert('Er ging iets mis: ' + (j.error || ('HTTP ' + r.status)));
+    if (!r.ok || !j.success) {
+      errorEl.textContent = j.error || ('Er ging iets mis (HTTP ' + r.status + ')');
+      errorEl.classList.add('show');
+      submitBtn.disabled = false;
+      submitLabel.textContent = 'Account aanmaken';
       return;
     }
-    window.location.href = j.url;
+    document.getElementById('signup-form-state').style.display = 'none';
+    document.getElementById('signup-success-state').style.display = '';
   } catch (e) {
-    alert('Netwerkfout: ' + e.message);
+    errorEl.textContent = 'Netwerkfout: ' + e.message;
+    errorEl.classList.add('show');
+    submitBtn.disabled = false;
+    submitLabel.textContent = 'Account aanmaken';
   }
 }
+
+document.getElementById('signup-modal').addEventListener('click', function(e) {
+  if (e.target.id === 'signup-modal') closeSignupModal();
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && document.getElementById('signup-modal').style.display === 'flex') {
+    closeSignupModal();
+  }
+});
 </script>
 
 </body>
