@@ -720,6 +720,444 @@ textarea.field-input{
   border: 1px solid var(--line);
 }
 
+/* ════════════════ ADMIN SHELL (weekly HR dashboard) ════════════════ */
+.admin-shell{
+  max-width: 1280px;
+  margin: 0 auto;
+  background: var(--bg);
+  min-height: 100vh;
+  padding-bottom: 60px;
+}
+.admin-header{
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(250,249,246,0.92);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  backdrop-filter: blur(14px) saturate(180%);
+  border-bottom: 1px solid var(--line);
+}
+.admin-header-inner{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 24px;
+  flex-wrap: wrap;
+}
+.admin-header-brand{display:flex;align-items:center;gap:10px}
+.admin-brand-stack{display:flex;flex-direction:column;gap:1px}
+.admin-brand-row{display:flex;align-items:center;gap:8px}
+.admin-brand-text{
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: -0.035em;
+  color: var(--ink);
+}
+.admin-badge{
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: rgba(232,65,10,0.1);
+  padding: 3px 7px;
+  border-radius: 5px;
+}
+.admin-company{
+  font-size: 12px;
+  color: var(--ink-3);
+  letter-spacing: -0.005em;
+  font-weight: 500;
+}
+
+.admin-week{
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 5px 6px;
+}
+.week-nav{
+  all: unset;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-2);
+  transition: background 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.week-nav:hover{background:var(--bg-2)}
+.week-nav:active{transform:scale(0.93)}
+.week-label{display:flex;flex-direction:column;align-items:center;min-width:140px;line-height:1.1;padding:2px 4px}
+.week-name{
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 600;
+  font-size: 13.5px;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+.week-range{font-size:11px;color:var(--ink-3);letter-spacing:-0.005em;margin-top:2px}
+
+.admin-header-actions{display:flex;align-items:center;gap:10px}
+.admin-text-btn{
+  all: unset;
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-3);
+  letter-spacing: -0.005em;
+  padding: 6px 2px;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.admin-text-btn:hover{color:var(--ink)}
+.admin-shell .csv-btn{background:var(--accent);font-size:12.5px;padding:9px 14px}
+.admin-shell .csv-btn[disabled]{background:var(--bg-2);color:var(--ink-4)}
+.admin-shell .logout-btn{background:var(--bg-2);width:34px;height:34px}
+
+.admin-summary{padding:22px 24px 0}
+.admin-summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.summary-pill{
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+.summary-pill-label{
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-4);
+  margin-bottom: 6px;
+}
+.summary-pill-value{
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 600;
+  font-size: 22px;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.admin-filters{padding:16px 24px 0}
+.filter-row{
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 10px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.filter-field{display:flex;flex-direction:column;gap:4px}
+.filter-label{
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-4);
+}
+.filter-input{
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -0.012em;
+  outline: none;
+  width: 100%;
+}
+.filter-input:focus{border-color:var(--ink-4);background:var(--white)}
+select.filter-input{cursor:pointer}
+
+.admin-table-wrap{padding:16px 24px 0}
+.admin-table{
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--white);
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  overflow: hidden;
+  font-size: 13px;
+}
+.admin-table thead th{
+  text-align: left;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  background: var(--bg-2);
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.admin-table .th-day,.admin-table .th-total,.admin-table .th-days,.admin-table .th-status{text-align:center}
+.admin-table tbody tr.worker-row{cursor:pointer;transition:background 0.12s}
+.admin-table tbody tr.worker-row:hover{background:rgba(232,65,10,0.03)}
+.admin-table tbody tr.worker-row.zebra{background:rgba(0,0,0,0.015)}
+.admin-table tbody tr.worker-row.zebra:hover{background:rgba(232,65,10,0.05)}
+.admin-table td{
+  padding: 13px 14px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+  font-variant-numeric: tabular-nums;
+}
+.admin-table tbody tr:last-child td{border-bottom:none}
+.admin-table .name-cell{
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.015em;
+  font-size: 13.5px;
+}
+.admin-table .project-cell{
+  color: var(--ink-3);
+  font-size: 12.5px;
+  letter-spacing: -0.005em;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.admin-table .day-cell{
+  text-align: center;
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 500;
+  font-size: 12.5px;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.admin-table .day-cell.empty{color:var(--ink-4);font-weight:400}
+.admin-table .day-cell.open{color:var(--accent);font-weight:600}
+.admin-table .day-cell.today{background:rgba(232,65,10,0.05)}
+.admin-table .total-cell{
+  text-align: center;
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 600;
+  font-size: 13.5px;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.admin-table .days-cell{
+  text-align: center;
+  color: var(--ink-3);
+  font-weight: 500;
+}
+.admin-table td:last-child{text-align:center}
+
+.status-badge{
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+.badge-active,.badge-complete{background:rgba(22,163,74,0.12);color:var(--good)}
+.badge-open{background:rgba(232,65,10,0.12);color:var(--accent)}
+.badge-absent{background:var(--bg-2);color:var(--ink-3)}
+
+.worker-detail td{padding:0;background:var(--bg-2);border-bottom:1px solid var(--line)}
+.detail-grid{
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  background: var(--line);
+}
+.detail-day{
+  background: var(--white);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 90px;
+}
+.detail-day-name{
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+.detail-day-date{color:var(--ink-3);font-weight:500;margin-left:3px;font-size:10.5px}
+.detail-empty{color:var(--ink-4);font-size:11.5px;font-style:italic}
+.detail-entry{
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--line);
+  margin-top: 4px;
+}
+.detail-entry:first-of-type{border-top:none;margin-top:0;padding-top:0}
+.detail-times{
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 600;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  letter-spacing: -0.015em;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.detail-arrow{color:var(--ink-4);font-weight:400}
+.detail-project{font-size:11px;color:var(--ink-3);letter-spacing:-0.005em}
+.detail-gps{
+  font-size: 10.5px;
+  color: var(--ink-3);
+  font-family: 'Inter Tight', sans-serif;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.005em;
+}
+.detail-notes{
+  font-size: 11.5px;
+  color: var(--ink-2);
+  line-height: 1.45;
+  background: var(--bg-2);
+  padding: 6px 8px;
+  border-radius: 6px;
+  letter-spacing: -0.005em;
+}
+.detail-photos{display:flex;gap:4px;flex-wrap:wrap;margin-top:2px}
+.detail-photo{
+  display: block;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+.detail-photo img{width:100%;height:100%;object-fit:cover;display:block}
+
+.admin-empty{
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 56px 24px;
+  text-align: center;
+  color: var(--ink-3);
+  font-size: 14px;
+  letter-spacing: -0.005em;
+}
+
+/* Mobile card view */
+.admin-card-list{display:none;flex-direction:column;gap:10px}
+.worker-card{
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.worker-card-head{
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.worker-card-main{flex:1;min-width:0}
+.worker-card-name{
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 600;
+  font-size: 14.5px;
+  color: var(--ink);
+  letter-spacing: -0.015em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.worker-card-project{
+  font-size: 11.5px;
+  color: var(--ink-3);
+  letter-spacing: -0.005em;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.worker-card-meta{text-align:right}
+.worker-card-total{
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.015em;
+}
+.worker-card-days{font-size:10.5px;color:var(--ink-3);margin-top:1px}
+.worker-card-week{
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-top: 1px solid var(--line);
+}
+.card-day{
+  padding: 8px 4px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-right: 1px solid var(--line);
+}
+.card-day:last-child{border-right:none}
+.card-day-name{
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.card-day-hours{
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 11.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.card-day.empty .card-day-hours{color:var(--ink-4);font-weight:400}
+.card-day.open .card-day-hours{color:var(--accent)}
+.card-day.today{background:rgba(232,65,10,0.06)}
+.worker-card-detail{border-top:1px solid var(--line);background:var(--bg-2)}
+.worker-card-detail .detail-grid{grid-template-columns:1fr}
+.worker-card-detail .detail-day{min-height:auto}
+
+@media (max-width: 920px){
+  .admin-summary-grid{grid-template-columns:repeat(2,1fr)}
+  .filter-row{grid-template-columns:1fr 1fr}
+}
+@media (max-width: 720px){
+  .admin-header-inner{padding:14px 16px;gap:10px}
+  .admin-summary,.admin-filters,.admin-table-wrap{padding-left:16px;padding-right:16px}
+  .admin-table{display:none}
+  .admin-card-list{display:flex}
+  .week-label{min-width:120px}
+}
+@media (max-width: 480px){
+  .admin-header-actions .admin-text-btn{display:none}
+  .admin-summary{padding-top:14px}
+  .filter-row{grid-template-columns:1fr 1fr;padding:10px}
+}
+
 /* ── Icons ── */
 svg{display:block}
 </style>
@@ -996,25 +1434,133 @@ svg{display:block}
 
   </div><!-- /worker-views -->
 
-  <!-- ════════════════ ADMIN VIEW ════════════════ -->
-  <div id="admin-view" style="display:none">
-    <div class="scroll-body">
-      <div class="admin-toolbar">
-        <div class="date-input-wrap">
-          <span class="date-input-lbl">Datum</span>
-          <input type="date" id="admin-date" class="date-input"/>
-        </div>
-        <button class="csv-btn" id="csv-btn" onclick="exportCSV()" disabled>Export CSV</button>
-      </div>
-      <div style="display:flex;justify-content:flex-end;margin-top:-8px">
-        <button type="button" id="portal-btn" onclick="openPortal()" style="all:unset;cursor:pointer;font-size:12px;color:var(--ink-3);font-weight:500;padding:4px 2px;letter-spacing:-0.005em;-webkit-tap-highlight-color:transparent">Abonnement beheren →</button>
-      </div>
-      <div class="admin-stats" id="admin-stats">—</div>
-      <div id="admin-list" style="display:flex;flex-direction:column;gap:10px"></div>
-    </div>
-  </div>
+  <!-- ADMIN moved out of .app — see #admin-shell below for the wider HR-style dashboard -->
 
 </div><!-- /app -->
+
+<!-- ════════════════ ADMIN SHELL ════════════════ -->
+<div class="admin-shell" id="admin-shell" style="display:none">
+
+  <header class="admin-header">
+    <div class="admin-header-inner">
+      <div class="admin-header-brand">
+        <svg viewBox="0 0 24 24" width="22" height="22" style="flex-shrink:0">
+          <rect x="2" y="2" width="20" height="20" rx="5.5" fill="#0f0f0f"/>
+          <rect x="7.5" y="7.5" width="9" height="9" rx="2.2" fill="white"/>
+          <circle cx="12" cy="12" r="1.6" fill="#0f0f0f"/>
+        </svg>
+        <div class="admin-brand-stack">
+          <div class="admin-brand-row">
+            <span class="admin-brand-text">crowdstamp</span>
+            <span class="admin-badge" id="admin-role-pill">Admin</span>
+          </div>
+          <div class="admin-company" id="admin-company">—</div>
+        </div>
+      </div>
+
+      <div class="admin-week">
+        <button class="week-nav" type="button" onclick="changeWeek(-1)" aria-label="Vorige week">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+        </button>
+        <div class="week-label">
+          <div class="week-name" id="admin-week-name">Week —</div>
+          <div class="week-range" id="admin-week-range">—</div>
+        </div>
+        <button class="week-nav" type="button" onclick="changeWeek(1)" aria-label="Volgende week">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+
+      <div class="admin-header-actions">
+        <button type="button" id="portal-btn" onclick="openPortal()" class="admin-text-btn">Abonnement beheren</button>
+        <button class="csv-btn" id="csv-btn" onclick="exportCSV()" disabled>Exporteer naar CSV</button>
+        <button class="logout-btn" type="button" onclick="doLogout()" title="Uitloggen">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 7V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2"/><path d="M18 15l4-4-4-4M22 11H10"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <section class="admin-summary">
+    <div class="admin-summary-grid">
+      <div class="summary-pill">
+        <div class="summary-pill-label">Check-ins</div>
+        <div class="summary-pill-value" id="sum-checkins">0</div>
+      </div>
+      <div class="summary-pill">
+        <div class="summary-pill-label">Uren gewerkt</div>
+        <div class="summary-pill-value" id="sum-hours">0u 0m</div>
+      </div>
+      <div class="summary-pill">
+        <div class="summary-pill-label">Actieve medewerkers</div>
+        <div class="summary-pill-value" id="sum-workers">0</div>
+      </div>
+      <div class="summary-pill">
+        <div class="summary-pill-label">Projecten</div>
+        <div class="summary-pill-value" id="sum-projects">0</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="admin-filters">
+    <div class="filter-row">
+      <div class="filter-field">
+        <label class="filter-label">Zoeken</label>
+        <input type="search" id="filter-search" class="filter-input" placeholder="Naam…" oninput="renderWeekDashboard()"/>
+      </div>
+      <div class="filter-field">
+        <label class="filter-label">Project</label>
+        <select id="filter-project" class="filter-input" onchange="renderWeekDashboard()">
+          <option value="">Alle projecten</option>
+        </select>
+      </div>
+      <div class="filter-field">
+        <label class="filter-label">Status</label>
+        <select id="filter-status" class="filter-input" onchange="renderWeekDashboard()">
+          <option value="">Alle</option>
+          <option value="active">Actief</option>
+          <option value="complete">Compleet</option>
+          <option value="open">Open</option>
+          <option value="absent">Afwezig</option>
+        </select>
+      </div>
+      <div class="filter-field">
+        <label class="filter-label">Spring naar datum</label>
+        <input type="date" id="filter-date" class="filter-input" onchange="jumpToDate(this.value)"/>
+      </div>
+    </div>
+  </section>
+
+  <section class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th class="th-name">Naam</th>
+          <th class="th-project">Project</th>
+          <th class="th-day">Ma</th>
+          <th class="th-day">Di</th>
+          <th class="th-day">Wo</th>
+          <th class="th-day">Do</th>
+          <th class="th-day">Vr</th>
+          <th class="th-day">Za</th>
+          <th class="th-day">Zo</th>
+          <th class="th-total">Totaal</th>
+          <th class="th-days">Dagen</th>
+          <th class="th-status">Status</th>
+        </tr>
+      </thead>
+      <tbody id="admin-tbody"></tbody>
+    </table>
+
+    <div class="admin-card-list" id="admin-card-list"></div>
+
+    <div class="admin-empty" id="admin-empty" style="display:none">
+      <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 12px;opacity:0.4"><rect x="3.5" y="5.5" width="17" height="14" rx="1.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>
+      <div>Geen registraties gevonden voor deze periode</div>
+    </div>
+  </section>
+
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -1071,7 +1617,7 @@ async function loadProfileAndRoute(authUser) {
   if (data.company_id) {
     const { data: company } = await sb
       .from('companies')
-      .select('plan, status, trial_ends_at')
+      .select('name, plan, status, trial_ends_at')
       .eq('id', data.company_id)
       .single();
     S.company = company || null;
@@ -1091,11 +1637,10 @@ async function loadProfileAndRoute(authUser) {
 }
 
 function hideAllScreens() {
-  document.getElementById('screen-auth').style.display = 'none';
-  document.getElementById('screen-trial-expired').style.display = 'none';
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('worker-views').style.display = 'none';
-  document.getElementById('admin-view').style.display = 'none';
+  ['screen-auth','screen-trial-expired','app','worker-views','admin-shell'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
 }
 
 function showAuth() {
@@ -1134,18 +1679,12 @@ function showWorker() {
 
 function showAdmin() {
   hideAllScreens();
-  document.getElementById('app').style.display = 'flex';
-  document.getElementById('admin-view').style.display = 'block';
-  document.getElementById('status-pill').style.display = 'none';
-  const rolePill = document.getElementById('role-pill');
-  rolePill.style.display = '';
-  rolePill.textContent = S.profile.role === 'superuser' ? 'Superuser' : 'Admin';
-
-  const today = isoDate(new Date());
-  const dateInput = document.getElementById('admin-date');
-  dateInput.value = today;
-  dateInput.onchange = () => loadDashboard(dateInput.value);
-  loadDashboard(today);
+  document.getElementById('admin-shell').style.display = 'block';
+  document.getElementById('admin-company').textContent = S.company?.name || '';
+  document.getElementById('admin-role-pill').textContent = S.profile.role === 'superuser' ? 'Superuser' : 'Admin';
+  S.adminDate = new Date();
+  document.getElementById('filter-date').value = isoDate(S.adminDate);
+  loadWeekDashboard();
 }
 
 async function doLogin() {
@@ -1633,73 +2172,300 @@ function switchTab(tab) {
 }
 
 // ════════════════════════════════════════════════════════
-// Admin dashboard
+// Admin dashboard — weekly HR view
 // ════════════════════════════════════════════════════════
-async function loadDashboard(dateStr) {
-  const list = document.getElementById('admin-list');
-  const stats = document.getElementById('admin-stats');
-  list.innerHTML = '<div class="admin-empty">Laden…</div>';
-  stats.textContent = '';
+const DAY_NAMES_NL_SHORT = ['Ma','Di','Wo','Do','Vr','Za','Zo'];
+const DAY_NAMES_NL_LONG  = ['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag'];
+
+function weekStart(date) {
+  const d = new Date(date);
+  const day = d.getDay() || 7; // Sun=0 → 7 so Monday = day 1
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate() - day + 1);
+  return d;
+}
+function isoWeekNumber(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+function isoWeekYear(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  return d.getUTCFullYear();
+}
+function fmtWeekRange(s, e) {
+  const optsShort = { day: 'numeric', month: 'long' };
+  const optsLong  = { day: 'numeric', month: 'long', year: 'numeric' };
+  return `${s.toLocaleDateString('nl-NL', optsShort)} - ${e.toLocaleDateString('nl-NL', optsLong)}`;
+}
+function calcHoursDecimal(checkIn, checkOut) {
+  if (!checkIn || !checkOut) return 0;
+  const [hi, mi] = checkIn.split(':').map(Number);
+  const [ho, mo] = checkOut.split(':').map(Number);
+  if ([hi, mi, ho, mo].some(n => isNaN(n))) return 0;
+  let diff = (ho * 60 + mo) - (hi * 60 + mi);
+  if (diff < 0) diff += 24 * 60; // crossed midnight
+  return diff / 60;
+}
+function fmtHoursDecimal(h) {
+  if (!h || h <= 0) return '—';
+  const hours = Math.floor(h);
+  let mins = Math.round((h - hours) * 60);
+  let hh = hours;
+  if (mins === 60) { hh += 1; mins = 0; }
+  return `${hh}u ${String(mins).padStart(2,'0')}m`;
+}
+function fmtDayShort(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
+}
+
+function changeWeek(delta) {
+  if (!S.adminDate) S.adminDate = new Date();
+  const d = new Date(S.adminDate);
+  d.setDate(d.getDate() + delta * 7);
+  S.adminDate = d;
+  document.getElementById('filter-date').value = isoDate(S.adminDate);
+  loadWeekDashboard();
+}
+function jumpToDate(value) {
+  if (!value) return;
+  const d = new Date(value + 'T00:00:00');
+  if (isNaN(d.getTime())) return;
+  S.adminDate = d;
+  loadWeekDashboard();
+}
+
+async function loadWeekDashboard() {
+  if (!S.adminDate) S.adminDate = new Date();
+  const startD = weekStart(S.adminDate);
+  const endD = new Date(startD.getTime() + 6 * 24 * 60 * 60 * 1000);
+  const startStr = isoDate(startD);
+  const endStr = isoDate(endD);
+
+  document.getElementById('admin-week-name').textContent =
+    `Week ${isoWeekNumber(S.adminDate)}, ${isoWeekYear(S.adminDate)}`;
+  document.getElementById('admin-week-range').textContent = fmtWeekRange(startD, endD);
+
+  const tbody = document.getElementById('admin-tbody');
+  const cardList = document.getElementById('admin-card-list');
+  const empty = document.getElementById('admin-empty');
+  tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:32px;color:var(--ink-3)">Laden…</td></tr>`;
+  cardList.innerHTML = '';
+  empty.style.display = 'none';
 
   const { data, error } = await sb
     .from('registrations')
     .select('*')
     .eq('company_id', S.profile.company_id)
-    .eq('date', dateStr)
-    .order('created_at', { ascending: false });
+    .gte('date', startStr)
+    .lte('date', endStr)
+    .order('full_name', { ascending: true })
+    .order('date', { ascending: true });
 
   if (error) {
-    list.innerHTML = `<div class="admin-empty">Fout: ${escapeHtml(error.message)}</div>`;
+    tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:32px;color:var(--accent)">Fout: ${escapeHtml(error.message)}</td></tr>`;
     document.getElementById('csv-btn').disabled = true;
     return;
   }
 
   S.currentRows = data || [];
-  document.getElementById('csv-btn').disabled = S.currentRows.length === 0;
-
-  if (S.currentRows.length === 0) {
-    list.innerHTML = '<div class="admin-empty">Geen registraties op deze datum</div>';
-    stats.textContent = '0 registraties';
-    return;
-  }
-  stats.textContent = `${S.currentRows.length} registratie${S.currentRows.length === 1 ? '' : 's'}`;
-
-  list.innerHTML = '';
-  S.currentRows.forEach(r => list.appendChild(renderRegCard(r)));
+  populateProjectFilter();
+  renderWeekDashboard();
 }
 
-function renderRegCard(r) {
-  const card = document.createElement('div');
-  card.className = 'reg-card';
-  const inGps  = r.check_in_lat != null  ? `${r.check_in_lat.toFixed(4)}, ${r.check_in_lng.toFixed(4)} (±${r.check_in_acc || '?'}m)` : '—';
-  const outGps = r.check_out_lat != null ? `${r.check_out_lat.toFixed(4)}, ${r.check_out_lng.toFixed(4)} (±${r.check_out_acc || '?'}m)` : '—';
-  const timesLine = (r.check_in_time || '—') + ' – ' + (r.check_out_time || '…');
+function populateProjectFilter() {
+  const select = document.getElementById('filter-project');
+  const current = select.value;
+  const projects = [...new Set((S.currentRows || []).map(r => r.project_name).filter(Boolean))].sort();
+  select.innerHTML = '<option value="">Alle projecten</option>' +
+    projects.map(p => `<option value="${escapeAttr(p)}">${escapeHtml(p)}</option>`).join('');
+  if (projects.includes(current)) select.value = current;
+}
 
-  card.innerHTML = `
-    <div class="reg-head">
-      <div>
-        <div class="reg-name">${escapeHtml(r.full_name || '—')}</div>
-        <div class="reg-project">${escapeHtml(r.project_name || 'Geen project')}</div>
-      </div>
-      <div>
-        <div class="reg-times">${escapeHtml(timesLine)}</div>
-        ${r.total_hours ? `<div class="reg-total">${escapeHtml(r.total_hours)}</div>` : ''}
-      </div>
-    </div>
-    <div class="reg-body">
-      <div class="reg-gps">
-        <div class="reg-gps-item"><span class="reg-gps-lbl">In</span><span class="reg-gps-val">${escapeHtml(inGps)}</span></div>
-        <div class="reg-gps-item"><span class="reg-gps-lbl">Uit</span><span class="reg-gps-val">${escapeHtml(outGps)}</span></div>
-      </div>
-      ${r.notes ? `<div class="reg-notes">${escapeHtml(r.notes)}</div>` : ''}
-    </div>
-    ${(r.photo_urls && r.photo_urls.length) ? `
-      <div class="reg-photos">
-        ${r.photo_urls.map(u => `<div class="reg-photo"><a href="${escapeAttr(u)}" target="_blank" rel="noopener"><img src="${escapeAttr(u)}" alt="Foto"/></a></div>`).join('')}
-      </div>
-    ` : ''}
+function getWorkerStatus(rows) {
+  const today = isoDate(new Date());
+  const todayRows = rows.filter(r => r.date === today);
+  if (todayRows.length === 0) return { key: 'absent', label: 'Afwezig', cls: 'badge-absent' };
+  const hasOpen = todayRows.some(r => r.check_in_time && !r.check_out_time);
+  if (hasOpen) return { key: 'open', label: 'Open', cls: 'badge-open' };
+  const hasComplete = todayRows.some(r => r.check_in_time && r.check_out_time);
+  if (hasComplete) return { key: 'complete', label: 'Compleet', cls: 'badge-complete' };
+  return { key: 'active', label: 'Actief', cls: 'badge-active' };
+}
+
+function renderWeekDashboard() {
+  const rows = S.currentRows || [];
+
+  // Group by worker
+  const byWorker = {};
+  rows.forEach(r => {
+    const key = r.full_name || '—';
+    if (!byWorker[key]) byWorker[key] = { name: key, days: {}, rows: [] };
+    if (!byWorker[key].days[r.date]) byWorker[key].days[r.date] = [];
+    byWorker[key].days[r.date].push(r);
+    byWorker[key].rows.push(r);
+  });
+
+  // Summary pills (computed across all rows, before filters)
+  document.getElementById('sum-checkins').textContent = rows.length;
+  const totalHours = rows.reduce((s, r) => s + calcHoursDecimal(r.check_in_time, r.check_out_time), 0);
+  document.getElementById('sum-hours').textContent = totalHours > 0 ? fmtHoursDecimal(totalHours) : '0u 00m';
+  document.getElementById('sum-workers').textContent = Object.keys(byWorker).length;
+  document.getElementById('sum-projects').textContent = new Set(rows.map(r => r.project_name).filter(Boolean)).size;
+
+  // Apply filters
+  const searchTerm    = document.getElementById('filter-search').value.toLowerCase().trim();
+  const projectFilter = document.getElementById('filter-project').value;
+  const statusFilter  = document.getElementById('filter-status').value;
+
+  const workers = Object.values(byWorker).filter(w => {
+    if (searchTerm && !w.name.toLowerCase().includes(searchTerm)) return false;
+    if (projectFilter && !w.rows.some(r => r.project_name === projectFilter)) return false;
+    if (statusFilter && getWorkerStatus(w.rows).key !== statusFilter) return false;
+    return true;
+  });
+
+  const tbody = document.getElementById('admin-tbody');
+  const cardList = document.getElementById('admin-card-list');
+  const empty = document.getElementById('admin-empty');
+
+  if (workers.length === 0) {
+    tbody.innerHTML = '';
+    cardList.innerHTML = '';
+    empty.style.display = '';
+    document.getElementById('csv-btn').disabled = true;
+    return;
+  }
+  empty.style.display = 'none';
+  document.getElementById('csv-btn').disabled = false;
+
+  // Build the seven day strings for this week
+  const startD = weekStart(S.adminDate);
+  const days = Array.from({ length: 7 }, (_, i) =>
+    isoDate(new Date(startD.getTime() + i * 24 * 60 * 60 * 1000)));
+  const todayStr = isoDate(new Date());
+
+  tbody.innerHTML = workers.map((w, i) => renderWorkerRow(w, days, todayStr, i)).join('');
+  cardList.innerHTML = workers.map(w => renderWorkerCard(w, days, todayStr)).join('');
+}
+
+function _rowIdFor(name) {
+  return 'wkr_' + name.replace(/[^A-Za-z0-9]/g, '_');
+}
+
+function renderWorkerRow(w, days, todayStr, idx) {
+  const status = getWorkerStatus(w.rows);
+  const totalHours = w.rows.reduce((s, r) => s + calcHoursDecimal(r.check_in_time, r.check_out_time), 0);
+  const daysWorked = new Set(w.rows.filter(r => r.check_in_time).map(r => r.date)).size;
+  const projects = [...new Set(w.rows.map(r => r.project_name).filter(Boolean))];
+  const projectLabel = projects.length === 0 ? '—'
+    : projects.length === 1 ? projects[0]
+    : `${projects[0]} +${projects.length - 1}`;
+
+  const dayCells = days.map(date => {
+    const dayRows = w.days[date] || [];
+    const isToday = date === todayStr;
+    if (dayRows.length === 0) return `<td class="day-cell empty${isToday ? ' today' : ''}">—</td>`;
+    const hours = dayRows.reduce((s, r) => s + calcHoursDecimal(r.check_in_time, r.check_out_time), 0);
+    if (hours === 0) return `<td class="day-cell open${isToday ? ' today' : ''}">open</td>`;
+    return `<td class="day-cell${isToday ? ' today' : ''}">${fmtHoursDecimal(hours)}</td>`;
+  }).join('');
+
+  const rowId = _rowIdFor(w.name);
+  const zebra = idx % 2 === 1 ? ' zebra' : '';
+  return `
+    <tr class="worker-row${zebra}" onclick="toggleDetail('${rowId}', 'row')">
+      <td class="name-cell">${escapeHtml(w.name)}</td>
+      <td class="project-cell" title="${escapeAttr(projects.join(', ') || '—')}">${escapeHtml(projectLabel)}</td>
+      ${dayCells}
+      <td class="total-cell">${fmtHoursDecimal(totalHours)}</td>
+      <td class="days-cell">${daysWorked}</td>
+      <td><span class="status-badge ${status.cls}">${status.label}</span></td>
+    </tr>
+    <tr class="worker-detail" id="${rowId}-row" style="display:none">
+      <td colspan="12">${renderWorkerDetail(w, days)}</td>
+    </tr>
   `;
-  return card;
+}
+
+function renderWorkerCard(w, days, todayStr) {
+  const status = getWorkerStatus(w.rows);
+  const totalHours = w.rows.reduce((s, r) => s + calcHoursDecimal(r.check_in_time, r.check_out_time), 0);
+  const daysWorked = new Set(w.rows.filter(r => r.check_in_time).map(r => r.date)).size;
+  const projects = [...new Set(w.rows.map(r => r.project_name).filter(Boolean))];
+  const projectLabel = projects.length === 0 ? '—'
+    : projects.length === 1 ? projects[0]
+    : `${projects[0]} +${projects.length - 1}`;
+  const rowId = _rowIdFor(w.name);
+  const dayInitials = ['M','D','W','D','V','Z','Z'];
+
+  const dayCells = days.map((date, i) => {
+    const dayRows = w.days[date] || [];
+    const isToday = date === todayStr;
+    const hours = dayRows.reduce((s, r) => s + calcHoursDecimal(r.check_in_time, r.check_out_time), 0);
+    const cls = hours > 0 ? 'has' : (dayRows.length > 0 ? 'open' : 'empty');
+    const display = hours > 0 ? fmtHoursDecimal(hours).replace(/\s.*/, '') : (dayRows.length > 0 ? '·' : '—');
+    return `<div class="card-day ${cls}${isToday ? ' today' : ''}"><span class="card-day-name">${dayInitials[i]}</span><span class="card-day-hours">${display}</span></div>`;
+  }).join('');
+
+  return `
+    <div class="worker-card">
+      <div class="worker-card-head" onclick="toggleDetail('${rowId}', 'card')">
+        <div class="worker-card-main">
+          <div class="worker-card-name">${escapeHtml(w.name)}</div>
+          <div class="worker-card-project">${escapeHtml(projectLabel)}</div>
+        </div>
+        <div class="worker-card-meta">
+          <div class="worker-card-total">${fmtHoursDecimal(totalHours)}</div>
+          <div class="worker-card-days">${daysWorked} dagen</div>
+        </div>
+        <span class="status-badge ${status.cls}">${status.label}</span>
+      </div>
+      <div class="worker-card-week">${dayCells}</div>
+      <div class="worker-card-detail" id="${rowId}-card" style="display:none">${renderWorkerDetail(w, days)}</div>
+    </div>
+  `;
+}
+
+function renderWorkerDetail(w, days) {
+  return `<div class="detail-grid">${days.map((date, i) => {
+    const dayRows = w.days[date] || [];
+    return `
+      <div class="detail-day">
+        <div class="detail-day-name">${DAY_NAMES_NL_LONG[i]} <span class="detail-day-date">${fmtDayShort(date)}</span></div>
+        ${dayRows.length === 0
+          ? '<div class="detail-empty">Geen registratie</div>'
+          : dayRows.map(r => {
+              const gpsIn = r.check_in_lat != null
+                ? `${r.check_in_lat.toFixed(4)}, ${r.check_in_lng.toFixed(4)} (±${r.check_in_acc || '?'}m)` : null;
+              return `
+                <div class="detail-entry">
+                  <div class="detail-times">
+                    <span>${escapeHtml(r.check_in_time || '?')}</span>
+                    <span class="detail-arrow">→</span>
+                    <span>${escapeHtml(r.check_out_time || '…')}</span>
+                  </div>
+                  ${r.project_name ? `<div class="detail-project">${escapeHtml(r.project_name)}</div>` : ''}
+                  ${gpsIn ? `<div class="detail-gps">${escapeHtml(gpsIn)}</div>` : ''}
+                  ${r.notes ? `<div class="detail-notes">${escapeHtml(r.notes)}</div>` : ''}
+                  ${(r.photo_urls && r.photo_urls.length) ? `<div class="detail-photos">${r.photo_urls.map(u => `<a href="${escapeAttr(u)}" target="_blank" rel="noopener" class="detail-photo"><img src="${escapeAttr(u)}" alt="Foto" loading="lazy"/></a>`).join('')}</div>` : ''}
+                </div>
+              `;
+            }).join('')}
+      </div>
+    `;
+  }).join('')}</div>`;
+}
+
+function toggleDetail(rowId, kind) {
+  const el = document.getElementById(`${rowId}-${kind}`);
+  if (!el) return;
+  el.style.display = (el.style.display === 'none' || el.style.display === '') ? (kind === 'row' ? 'table-row' : '') : 'none';
 }
 
 // ════════════════════════════════════════════════════════
@@ -1755,7 +2521,7 @@ function exportCSV() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `registraties_${document.getElementById('admin-date').value}.csv`;
+  a.download = `registraties_week_${isoWeekNumber(S.adminDate)}_${isoWeekYear(S.adminDate)}.csv`;
   document.body.appendChild(a);
   a.click();
   setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
