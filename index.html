@@ -1158,6 +1158,245 @@ select.filter-input{cursor:pointer}
   .filter-row{grid-template-columns:1fr 1fr;padding:10px}
 }
 
+/* ── Admin tabs ── */
+.admin-tabs{
+  display: flex;
+  gap: 2px;
+  padding: 0 24px;
+  background: var(--white);
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.admin-tab{
+  all: unset;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-3);
+  letter-spacing: -0.005em;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+.admin-tab:hover{color:var(--ink-2)}
+.admin-tab.active{
+  color: var(--ink);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+/* ── Medewerkers tab ── */
+.member-section{padding:18px 24px 0}
+.member-card{
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 20px 22px;
+}
+.member-card-title{
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+.member-card-sub{
+  font-size: 13px;
+  color: var(--ink-3);
+  margin-bottom: 16px;
+  letter-spacing: -0.005em;
+}
+.member-card-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.member-card-count{
+  font-size: 11.5px;
+  color: var(--ink-3);
+  font-weight: 500;
+  letter-spacing: -0.005em;
+}
+
+.invite-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.invite-field{display:flex;flex-direction:column;gap:5px}
+.invite-label{
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-4);
+}
+.invite-field input,.invite-field select{
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -0.012em;
+  outline: none;
+  width: 100%;
+}
+.invite-field input:focus,.invite-field select:focus{border-color:var(--ink-4);background:var(--white)}
+.invite-field select{cursor:pointer}
+.invite-submit{
+  all: unset;
+  cursor: pointer;
+  background: var(--accent);
+  color: white;
+  border-radius: 10px;
+  padding: 12px 22px;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  transition: opacity 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.invite-submit:active:not([disabled]){transform:scale(0.98)}
+.invite-submit[disabled]{opacity:0.5;cursor:not-allowed}
+.invite-error{
+  margin-top: 10px;
+  padding: 9px 12px;
+  background: rgba(232,65,10,0.08);
+  border: 1px solid rgba(232,65,10,0.2);
+  border-radius: 8px;
+  color: var(--accent);
+  font-size: 12.5px;
+  font-weight: 500;
+  display: none;
+}
+.invite-error.show{display:block}
+.invite-success{
+  margin-top: 10px;
+  padding: 9px 12px;
+  background: rgba(22,163,74,0.08);
+  border: 1px solid rgba(22,163,74,0.2);
+  border-radius: 8px;
+  color: var(--good);
+  font-size: 12.5px;
+  font-weight: 500;
+  display: none;
+}
+.invite-success.show{display:block}
+
+/* Members list */
+.member-row{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+.member-row:last-child{margin-bottom:0}
+.member-info{flex:1;min-width:0}
+.member-name{
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.015em;
+}
+.member-email{
+  font-size: 12px;
+  color: var(--ink-3);
+  margin-top: 2px;
+  letter-spacing: -0.005em;
+}
+.member-badges{
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.member-badge{
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 4px 7px;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+.badge-functie{background:rgba(0,0,0,0.06);color:var(--ink-2)}
+.badge-admin{background:rgba(232,65,10,0.12);color:var(--accent)}
+.badge-status-active{background:rgba(22,163,74,0.12);color:var(--good)}
+.badge-status-invited{background:rgba(217,119,6,0.12);color:#b45309}
+.badge-status-inactive{background:var(--bg-2);color:var(--ink-3)}
+.member-date{
+  font-size: 11px;
+  color: var(--ink-3);
+  font-family: 'Inter Tight', sans-serif;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+}
+.member-action{display:flex;align-items:center}
+.member-remove{
+  all: unset;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent);
+  padding: 6px 10px;
+  border-radius: 6px;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s;
+}
+.member-remove:hover{background:rgba(232,65,10,0.08)}
+.member-confirm{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--ink-2)}
+.member-confirm-text{margin-right:4px;font-weight:500}
+.member-confirm-btn{
+  all: unset;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  -webkit-tap-highlight-color: transparent;
+}
+.member-confirm-yes{background:var(--accent);color:white}
+.member-confirm-no{background:var(--bg-2);color:var(--ink-2)}
+.member-list-loading,.member-list-empty{
+  color: var(--ink-3);
+  text-align: center;
+  padding: 24px;
+  font-size: 13px;
+  letter-spacing: -0.005em;
+}
+
+@media (max-width: 720px){
+  .invite-grid{grid-template-columns:1fr}
+  .member-section{padding-left:16px;padding-right:16px}
+  .member-row{flex-wrap:wrap;gap:8px}
+  .member-info{flex-basis:100%}
+  .member-badges{order:3;flex-basis:100%;margin-top:4px}
+  .member-date{order:4}
+  .member-action{order:5;margin-left:auto}
+}
+
 /* ── Icons ── */
 svg{display:block}
 </style>
@@ -1481,6 +1720,23 @@ svg{display:block}
     </div>
   </header>
 
+  <nav class="admin-tabs">
+    <button class="admin-tab active" id="admin-tab-overzicht" type="button" onclick="switchAdminTab('overzicht')">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.2"/></svg>
+      <span>Overzicht</span>
+    </button>
+    <button class="admin-tab" id="admin-tab-urenstaat" type="button" onclick="switchAdminTab('urenstaat')">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg>
+      <span>Urenstaat</span>
+    </button>
+    <button class="admin-tab" id="admin-tab-medewerkers" type="button" onclick="switchAdminTab('medewerkers')">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19.5c1-3 3.2-4.5 6-4.5s5 1.5 6 4.5"/><circle cx="17" cy="8" r="2.5"/><path d="M15.8 14c2 .1 3.4 1.1 4.2 2.5"/></svg>
+      <span>Medewerkers</span>
+    </button>
+  </nav>
+
+  <div class="admin-tab-content" id="tab-overzicht">
+
   <section class="admin-summary">
     <div class="admin-summary-grid">
       <div class="summary-pill">
@@ -1501,6 +1757,10 @@ svg{display:block}
       </div>
     </div>
   </section>
+
+  </div><!-- /tab-overzicht -->
+
+  <div class="admin-tab-content" id="tab-urenstaat" style="display:none">
 
   <section class="admin-filters">
     <div class="filter-row">
@@ -1559,6 +1819,58 @@ svg{display:block}
       <div>Geen registraties gevonden voor deze periode</div>
     </div>
   </section>
+
+  </div><!-- /tab-urenstaat -->
+
+  <div class="admin-tab-content" id="tab-medewerkers" style="display:none">
+
+    <section class="member-section">
+      <div class="member-card">
+        <h2 class="member-card-title">Medewerker uitnodigen</h2>
+        <p class="member-card-sub">De persoon ontvangt een e-mail om een account aan te maken.</p>
+
+        <form id="invite-form" onsubmit="event.preventDefault();inviteMember()">
+          <div class="invite-grid">
+            <div class="invite-field">
+              <label class="invite-label">Volledige naam</label>
+              <input id="invite-naam" type="text" placeholder="Voor- en achternaam" autocomplete="name" required minlength="2"/>
+            </div>
+            <div class="invite-field">
+              <label class="invite-label">E-mailadres</label>
+              <input id="invite-email" type="email" placeholder="naam@bedrijf.nl" autocomplete="email" required/>
+            </div>
+            <div class="invite-field">
+              <label class="invite-label">Functie</label>
+              <select id="invite-functie" required>
+                <option value="">Kies een functie…</option>
+                <option value="medewerker">Medewerker</option>
+                <option value="onderaannemer">Onderaannemer</option>
+                <option value="service_monteur">Service monteur</option>
+              </select>
+            </div>
+          </div>
+          <button class="invite-submit" id="invite-submit" type="submit">
+            <span id="invite-submit-label">Uitnodiging versturen</span>
+          </button>
+          <div class="invite-error" id="invite-error"></div>
+          <div class="invite-success" id="invite-success"></div>
+        </form>
+      </div>
+    </section>
+
+    <section class="member-section">
+      <div class="member-card">
+        <div class="member-card-head">
+          <h2 class="member-card-title" style="margin-bottom:0">Team</h2>
+          <span class="member-card-count" id="member-count"></span>
+        </div>
+        <div id="member-list">
+          <div class="member-list-loading">Laden…</div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /tab-medewerkers -->
 
 </div>
 
@@ -1684,6 +1996,7 @@ function showAdmin() {
   document.getElementById('admin-role-pill').textContent = S.profile.role === 'superuser' ? 'Superuser' : 'Admin';
   S.adminDate = new Date();
   document.getElementById('filter-date').value = isoDate(S.adminDate);
+  switchAdminTab('overzicht');
   loadWeekDashboard();
 }
 
@@ -2466,6 +2779,209 @@ function toggleDetail(rowId, kind) {
   const el = document.getElementById(`${rowId}-${kind}`);
   if (!el) return;
   el.style.display = (el.style.display === 'none' || el.style.display === '') ? (kind === 'row' ? 'table-row' : '') : 'none';
+}
+
+// ════════════════════════════════════════════════════════
+// Admin tabs
+// ════════════════════════════════════════════════════════
+function switchAdminTab(name) {
+  ['overzicht','urenstaat','medewerkers'].forEach(t => {
+    const tab = document.getElementById('admin-tab-' + t);
+    const content = document.getElementById('tab-' + t);
+    if (tab) tab.classList.toggle('active', t === name);
+    if (content) content.style.display = (t === name) ? '' : 'none';
+  });
+  if (name === 'medewerkers') loadMembers();
+}
+
+// ════════════════════════════════════════════════════════
+// Medewerkers (team management)
+// ════════════════════════════════════════════════════════
+const FUNCTIE_LABELS = {
+  medewerker: 'Medewerker',
+  onderaannemer: 'Onderaannemer',
+  service_monteur: 'Service monteur',
+};
+
+async function loadMembers() {
+  const list = document.getElementById('member-list');
+  if (!list) return;
+  list.innerHTML = '<div class="member-list-loading">Laden…</div>';
+
+  const { data, error } = await sb.from('profiles')
+    .select('id, full_name, email, role, functie, status, created_at')
+    .eq('company_id', S.profile.company_id)
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    list.innerHTML = `<div class="member-list-empty">Fout: ${escapeHtml(error.message)}</div>`;
+    return;
+  }
+  S.members = data || [];
+  const countEl = document.getElementById('member-count');
+  if (countEl) countEl.textContent = `${S.members.length} ${S.members.length === 1 ? 'persoon' : 'personen'}`;
+  renderMembers();
+}
+
+function renderMembers() {
+  const list = document.getElementById('member-list');
+  if (!list) return;
+  const members = S.members || [];
+  const currentUserId = S.profile?.id;
+
+  if (members.length === 0) {
+    list.innerHTML = '<div class="member-list-empty">Geen medewerkers gevonden</div>';
+    return;
+  }
+
+  list.innerHTML = members.map(m => {
+    const isCurrentUser = m.id === currentUserId;
+    const isAdmin = m.role === 'admin' || m.role === 'superuser';
+    const functieLabel = FUNCTIE_LABELS[m.functie] || (isAdmin ? 'Beheerder' : 'Medewerker');
+
+    const statusClass = m.status === 'invited' ? 'badge-status-invited'
+      : m.status === 'inactive' ? 'badge-status-inactive'
+      : 'badge-status-active';
+    const statusLabel = m.status === 'invited' ? 'Uitgenodigd'
+      : m.status === 'inactive' ? 'Inactief'
+      : 'Actief';
+
+    const created = m.created_at
+      ? new Date(m.created_at).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })
+      : '—';
+
+    const showRemove = !isCurrentUser && m.status !== 'inactive';
+
+    return `
+      <div class="member-row" data-id="${escapeAttr(m.id)}">
+        <div class="member-info">
+          <div class="member-name">${escapeHtml(m.full_name || '—')}${isCurrentUser ? ' <span style="color:var(--ink-3);font-weight:500;font-size:11px">(jij)</span>' : ''}</div>
+          <div class="member-email">${escapeHtml(m.email || '—')}</div>
+        </div>
+        <div class="member-badges">
+          <span class="member-badge badge-functie">${escapeHtml(functieLabel)}</span>
+          ${isAdmin ? '<span class="member-badge badge-admin">Beheerder</span>' : ''}
+          <span class="member-badge ${statusClass}">${statusLabel}</span>
+        </div>
+        <div class="member-date">${escapeHtml(created)}</div>
+        <div class="member-action" id="member-action-${escapeAttr(m.id)}">
+          ${showRemove ? `<button type="button" class="member-remove" onclick="askRemoveMember('${escapeAttr(m.id)}')">Verwijderen</button>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function askRemoveMember(userId) {
+  const actionEl = document.getElementById('member-action-' + userId);
+  if (!actionEl) return;
+  actionEl.innerHTML = `
+    <div class="member-confirm">
+      <span class="member-confirm-text">Zeker?</span>
+      <button type="button" class="member-confirm-btn member-confirm-yes" onclick="confirmRemoveMember('${escapeAttr(userId)}')">Ja</button>
+      <button type="button" class="member-confirm-btn member-confirm-no" onclick="renderMembers()">Nee</button>
+    </div>
+  `;
+}
+
+async function confirmRemoveMember(userId) {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { toast('Niet ingelogd'); return; }
+
+  const actionEl = document.getElementById('member-action-' + userId);
+  if (actionEl) actionEl.innerHTML = '<span style="font-size:12px;color:var(--ink-3)">Bezig…</span>';
+
+  try {
+    const r = await fetch('/.netlify/functions/remove-member', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ userId }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.success) {
+      toast(j.error || 'Verwijderen mislukt');
+      renderMembers();
+      return;
+    }
+    toast('Medewerker verwijderd');
+    loadMembers();
+  } catch (e) {
+    toast('Netwerkfout: ' + e.message);
+    renderMembers();
+  }
+}
+
+async function inviteMember() {
+  const naam = document.getElementById('invite-naam').value.trim();
+  const email = document.getElementById('invite-email').value.trim();
+  const functie = document.getElementById('invite-functie').value;
+  const errorEl = document.getElementById('invite-error');
+  const successEl = document.getElementById('invite-success');
+  const submitBtn = document.getElementById('invite-submit');
+  const submitLabel = document.getElementById('invite-submit-label');
+
+  errorEl.classList.remove('show');
+  successEl.classList.remove('show');
+
+  if (!naam || !email || !functie) {
+    errorEl.textContent = 'Vul alle velden in';
+    errorEl.classList.add('show');
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errorEl.textContent = 'Voer een geldig e-mailadres in';
+    errorEl.classList.add('show');
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitLabel.innerHTML = '<div class="spinner"></div>';
+
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) {
+    errorEl.textContent = 'Niet ingelogd';
+    errorEl.classList.add('show');
+    submitBtn.disabled = false;
+    submitLabel.textContent = 'Uitnodiging versturen';
+    return;
+  }
+
+  try {
+    const r = await fetch('/.netlify/functions/invite-member', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ naam, email, functie }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.success) {
+      errorEl.textContent = j.error || ('Er ging iets mis (HTTP ' + r.status + ')');
+      errorEl.classList.add('show');
+      submitBtn.disabled = false;
+      submitLabel.textContent = 'Uitnodiging versturen';
+      return;
+    }
+    successEl.textContent = `Uitnodiging verstuurd naar ${email}`;
+    successEl.classList.add('show');
+
+    document.getElementById('invite-naam').value = '';
+    document.getElementById('invite-email').value = '';
+    document.getElementById('invite-functie').value = '';
+    submitBtn.disabled = false;
+    submitLabel.textContent = 'Uitnodiging versturen';
+
+    loadMembers();
+  } catch (e) {
+    errorEl.textContent = 'Netwerkfout: ' + e.message;
+    errorEl.classList.add('show');
+    submitBtn.disabled = false;
+    submitLabel.textContent = 'Uitnodiging versturen';
+  }
 }
 
 // ════════════════════════════════════════════════════════
