@@ -949,7 +949,7 @@ svg{display:block}
     <!-- Submit -->
     <div class="submit-wrap">
       <button class="submit-btn" id="submit-btn" disabled onclick="doSubmit()">
-        <span class="submit-btn-label" id="submit-label">Verstuur dagrapport</span>
+        <span class="submit-btn-label" id="submit-label">Verstuur rapportage</span>
         <div class="submit-circle">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="submit-icon"><path d="M5 12.5 10 17.5 19.5 7.5"/></svg>
         </div>
@@ -1505,7 +1505,7 @@ async function doSubmit() {
 
   if (error) {
     toast('Opslaan mislukt: ' + error.message);
-    document.getElementById('submit-label').textContent = 'Verstuur dagrapport';
+    document.getElementById('submit-label').textContent = 'Verstuur rapportage';
     btn.disabled = false;
     return;
   }
@@ -1533,12 +1533,12 @@ async function doSubmit() {
     if (updErr) console.warn('photo_urls update failed', updErr);
   }
 
-  toast('Dagrapport verstuurd');
+  toast('Rapportage verstuurd');
   document.getElementById('submit-label').textContent = 'Verstuurd';
 
   setTimeout(() => {
     resetWorkerState();
-    document.getElementById('submit-label').textContent = 'Verstuur dagrapport';
+    document.getElementById('submit-label').textContent = 'Verstuur rapportage';
     loadLogbookToday();
   }, 2200);
 }
