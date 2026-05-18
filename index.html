@@ -1892,6 +1892,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     storage: window.localStorage
   }
 });
+console.log('sb created:', typeof sb, typeof sb.auth);
 
 // ════════════════════════════════════════════════════════
 // State
