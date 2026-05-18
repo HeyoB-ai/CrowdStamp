@@ -1923,6 +1923,7 @@ const S = {
   profile: null,       // { id, company_id, role, full_name }
   email: null,
   currentRows: [],     // admin: rows currently shown
+  registrationId: null, // today's registration row id (for restore + update)
 };
 
 // ════════════════════════════════════════════════════════
@@ -1969,6 +1970,49 @@ if (typeof supabase === 'undefined') {
   console.log('Auth listener registered, calling initApp...');
 
   initApp();
+}
+
+// ════════════════════════════════════════════════════════
+// REST helpers — bypass the Supabase JS SDK (which hangs)
+// ════════════════════════════════════════════════════════
+async function supabaseGet(path) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${cachedSession.access_token}`,
+      'Accept': 'application/json'
+    }
+  });
+  return res.json();
+}
+
+async function supabasePost(table, body) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${cachedSession.access_token}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify(body)
+  });
+  return res.json();
+}
+
+async function supabasePatch(table, id, body) {
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${cachedSession.access_token}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify(body)
+  });
+  return res.json();
 }
 
 async function loadProfileAndRoute(authUser) {
@@ -2109,6 +2153,107 @@ function showWorker() {
 
   updateOverview();
   loadLogbookToday();
+  loadTodayRegistration();
+}
+
+// Parse a "HH:MM" string into a Date set to today at that time.
+function parseTimeForToday(timeStr) {
+  if (!timeStr) return null;
+  const [h, m] = String(timeStr).split(':').map(Number);
+  if (isNaN(h) || isNaN(m)) return null;
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  return d;
+}
+
+async function loadTodayRegistration() {
+  try {
+    const today = isoDate(new Date());
+    const rows = await supabaseGet(
+      `registrations?user_id=eq.${S.profile.id}&date=eq.${today}&order=created_at.desc&limit=1`
+    );
+    console.log('Today registration:', rows);
+
+    if (!rows || rows.length === 0) {
+      S.registrationId = null;
+      return;
+    }
+
+    const reg = rows[0];
+    S.registrationId = reg.id;
+
+    if (reg.project_name) {
+      document.getElementById('werk').value = reg.project_name;
+    }
+    if (reg.notes) {
+      document.getElementById('commentaar').value = reg.notes;
+    }
+
+    if (reg.check_in_time) {
+      S.inTime = parseTimeForToday(reg.check_in_time) || new Date();
+      S.inCoords = (reg.check_in_lat != null) ? {
+        lat: reg.check_in_lat,
+        lng: reg.check_in_lng,
+        acc: reg.check_in_acc
+      } : null;
+
+      const tileIn = document.getElementById('tile-in');
+      tileIn.className = 'action-tile done';
+      document.getElementById('time-in').textContent = reg.check_in_time;
+      document.getElementById('time-in').style.color = 'var(--ink-2)';
+
+      if (S.inCoords) {
+        document.getElementById('gps-row').style.display = '';
+        document.getElementById('gps-in-row').style.display = '';
+        document.getElementById('gps-in-val').textContent = fmtCoords(S.inCoords);
+      }
+
+      const tileOut = document.getElementById('tile-out');
+      tileOut.removeAttribute('disabled');
+      tileOut.className = 'action-tile primary-out';
+
+      setStatus('active');
+      console.log('Check-in restored:', reg.check_in_time);
+    }
+
+    if (reg.check_out_time) {
+      S.outTime = parseTimeForToday(reg.check_out_time) || new Date();
+      S.outCoords = (reg.check_out_lat != null) ? {
+        lat: reg.check_out_lat,
+        lng: reg.check_out_lng,
+        acc: reg.check_out_acc
+      } : null;
+
+      const tileOut = document.getElementById('tile-out');
+      tileOut.className = 'action-tile done';
+      document.getElementById('time-out').textContent = reg.check_out_time;
+
+      if (S.outCoords) {
+        document.getElementById('gps-out-row').style.display = '';
+        document.getElementById('gps-out-val').textContent = fmtCoords(S.outCoords);
+      }
+
+      const totaal = reg.total_hours || (S.inTime ? calcTotaal(S.inTime, S.outTime) : null);
+      if (totaal) {
+        const td = document.getElementById('totaal-display');
+        td.textContent = 'Totaal ' + totaal;
+        td.style.display = '';
+        document.getElementById('sum-totaal-row').style.display = '';
+        document.getElementById('sum-totaal').textContent = totaal;
+      }
+
+      setStatus('done');
+      console.log('Check-out restored:', reg.check_out_time);
+    } else if (reg.check_in_time) {
+      // Active check-in (no check-out yet) — resume the elapsed timer.
+      startElapsed();
+    }
+
+    updateOverview();
+    updateSubmit();
+  } catch (e) {
+    console.error('loadTodayRegistration failed:', e);
+  }
 }
 
 function showAdmin() {
@@ -2319,6 +2464,32 @@ async function handlePunch(type) {
       startElapsed();
       toast('Ingecheckt — ' + fmt(now));
 
+      // Persist check-in to Supabase immediately so the worker can close the app.
+      const werk = document.getElementById('werk').value.trim();
+      const inData = {
+        user_id: S.profile.id,
+        company_id: S.profile.company_id,
+        full_name: S.profile.full_name || cachedSession.user.email,
+        project_name: werk || null,
+        check_in_time: fmt(now),
+        check_in_lat: coords.lat,
+        check_in_lng: coords.lng,
+        check_in_acc: coords.acc,
+        date: isoDate(now)
+      };
+      try {
+        if (S.registrationId) {
+          await supabasePatch('registrations', S.registrationId, inData);
+        } else {
+          const rows = await supabasePost('registrations', inData);
+          if (rows?.[0]?.id) S.registrationId = rows[0].id;
+          console.log('Check-in saved, id:', S.registrationId);
+        }
+      } catch (e) {
+        console.error('Save check-in failed:', e);
+        // Don't block the user — UI is already updated.
+      }
+
     } else {
       S.outTime = now;
       S.outCoords = coords;
@@ -2340,6 +2511,22 @@ async function handlePunch(type) {
 
       setStatus('done');
       toast('Uitgecheckt — ' + fmt(now));
+
+      // Persist check-out to Supabase.
+      if (S.registrationId) {
+        try {
+          await supabasePatch('registrations', S.registrationId, {
+            check_out_time: fmt(now),
+            check_out_lat: coords.lat,
+            check_out_lng: coords.lng,
+            check_out_acc: coords.acc,
+            total_hours: totaal
+          });
+          console.log('Check-out saved');
+        } catch (e) {
+          console.error('Save check-out failed:', e);
+        }
+      }
     }
 
     updateOverview();
@@ -2461,59 +2648,78 @@ async function doSubmit() {
   }
 
   const today = isoDate(new Date());
-  const payload = {
-    user_id: S.profile.id,
-    company_id: S.profile.company_id,
-    full_name: naam,
-    project_name: werk || null,
-    check_in_time: fmt(S.inTime),
-    check_in_lat: S.inCoords?.lat ?? null,
-    check_in_lng: S.inCoords?.lng ?? null,
-    check_in_acc: S.inCoords?.acc ?? null,
-    check_out_time: S.outTime ? fmt(S.outTime) : null,
-    check_out_lat: S.outCoords?.lat ?? null,
-    check_out_lng: S.outCoords?.lng ?? null,
-    check_out_acc: S.outCoords?.acc ?? null,
-    notes: document.getElementById('commentaar').value.trim() || null,
-    date: today,
-    total_hours: S.outTime ? calcTotaal(S.inTime, S.outTime) : null,
-  };
+  const totaal = S.outTime ? calcTotaal(S.inTime, S.outTime) : null;
+  const notes = document.getElementById('commentaar').value.trim() || null;
 
-  // 1. Insert row
-  const { data: row, error } = await sb
-    .from('registrations')
-    .insert(payload)
-    .select()
-    .single();
-
-  if (error) {
-    toast('Opslaan mislukt: ' + error.message);
+  // 1. Save row (PATCH existing if we have an id, INSERT otherwise).
+  let registrationId = S.registrationId;
+  try {
+    if (registrationId) {
+      await supabasePatch('registrations', registrationId, {
+        full_name: naam,
+        project_name: werk || null,
+        notes: notes,
+        total_hours: totaal,
+      });
+      console.log('Registration updated, id:', registrationId);
+    } else {
+      const rows = await supabasePost('registrations', {
+        user_id: S.profile.id,
+        company_id: S.profile.company_id,
+        full_name: naam,
+        project_name: werk || null,
+        check_in_time: fmt(S.inTime),
+        check_in_lat: S.inCoords?.lat ?? null,
+        check_in_lng: S.inCoords?.lng ?? null,
+        check_in_acc: S.inCoords?.acc ?? null,
+        check_out_time: S.outTime ? fmt(S.outTime) : null,
+        check_out_lat: S.outCoords?.lat ?? null,
+        check_out_lng: S.outCoords?.lng ?? null,
+        check_out_acc: S.outCoords?.acc ?? null,
+        notes: notes,
+        date: today,
+        total_hours: totaal,
+      });
+      if (rows?.[0]?.id) {
+        registrationId = rows[0].id;
+        S.registrationId = registrationId;
+      } else {
+        throw new Error('Geen ID terug van server');
+      }
+      console.log('Registration inserted, id:', registrationId);
+    }
+  } catch (e) {
+    toast('Opslaan mislukt: ' + (e.message || 'onbekende fout'));
     document.getElementById('submit-label').textContent = 'Verstuur rapportage';
     btn.disabled = false;
     return;
   }
 
-  // 2. Upload photos
+  // 2. Upload photos (still via sb.storage SDK; if that hangs, convert separately).
   const urls = [];
   for (let i = 0; i < S.photos.length; i++) {
     const p = S.photos[i];
     const ext = (p.file.name.split('.').pop() || 'jpg').toLowerCase();
-    const path = `${S.profile.id}/${today}/${row.id}_${i}.${ext}`;
-    const { error: upErr } = await sb.storage
-      .from('werkfotos')
-      .upload(path, p.file, { contentType: p.file.type || 'image/jpeg', upsert: false });
-    if (upErr) { console.warn('photo upload failed', upErr); continue; }
-    const { data: pub } = sb.storage.from('werkfotos').getPublicUrl(path);
-    if (pub?.publicUrl) urls.push(pub.publicUrl);
+    const path = `${S.profile.id}/${today}/${registrationId}_${i}.${ext}`;
+    try {
+      const { error: upErr } = await sb.storage
+        .from('werkfotos')
+        .upload(path, p.file, { contentType: p.file.type || 'image/jpeg', upsert: false });
+      if (upErr) { console.warn('photo upload failed', upErr); continue; }
+      const { data: pub } = sb.storage.from('werkfotos').getPublicUrl(path);
+      if (pub?.publicUrl) urls.push(pub.publicUrl);
+    } catch (e) {
+      console.warn('photo upload threw', e);
+    }
   }
 
-  // 3. Patch row with photo_urls
+  // 3. Patch row with photo_urls.
   if (urls.length) {
-    const { error: updErr } = await sb
-      .from('registrations')
-      .update({ photo_urls: urls })
-      .eq('id', row.id);
-    if (updErr) console.warn('photo_urls update failed', updErr);
+    try {
+      await supabasePatch('registrations', registrationId, { photo_urls: urls });
+    } catch (e) {
+      console.warn('photo_urls patch failed', e);
+    }
   }
 
   toast('Rapportage verstuurd');
@@ -2530,6 +2736,7 @@ function resetWorkerState() {
   S.inTime = null; S.inCoords = null;
   S.outTime = null; S.outCoords = null;
   S.photos = [];
+  S.registrationId = null;
   if (S.elapsedInterval) clearInterval(S.elapsedInterval);
 
   const commentEl = document.getElementById('commentaar');
@@ -2563,12 +2770,14 @@ function resetWorkerState() {
 // ════════════════════════════════════════════════════════
 async function loadLogbookToday() {
   const today = isoDate(new Date());
-  const { data, error } = await sb
-    .from('registrations')
-    .select('*')
-    .eq('user_id', S.profile.id)
-    .eq('date', today)
-    .order('created_at', { ascending: false });
+  let data = null, error = null;
+  try {
+    data = await supabaseGet(
+      `registrations?user_id=eq.${S.profile.id}&date=eq.${today}&order=created_at.desc`
+    );
+  } catch (e) {
+    error = e;
+  }
 
   const screen = document.getElementById('screen-log');
   const empty = document.getElementById('log-empty');
@@ -2702,14 +2911,14 @@ async function loadWeekDashboard() {
   cardList.innerHTML = '';
   empty.style.display = 'none';
 
-  const { data, error } = await sb
-    .from('registrations')
-    .select('*')
-    .eq('company_id', S.profile.company_id)
-    .gte('date', startStr)
-    .lte('date', endStr)
-    .order('full_name', { ascending: true })
-    .order('date', { ascending: true });
+  let data = null, error = null;
+  try {
+    data = await supabaseGet(
+      `registrations?company_id=eq.${S.profile.company_id}&date=gte.${startStr}&date=lte.${endStr}&order=full_name.asc,date.asc`
+    );
+  } catch (e) {
+    error = e;
+  }
 
   if (error) {
     tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:32px;color:var(--accent)">Fout: ${escapeHtml(error.message)}</td></tr>`;
@@ -2939,10 +3148,14 @@ async function loadMembers() {
   if (!list) return;
   list.innerHTML = '<div class="member-list-loading">Laden…</div>';
 
-  const { data, error } = await sb.from('profiles')
-    .select('id, full_name, email, role, functie, status, created_at')
-    .eq('company_id', S.profile.company_id)
-    .order('created_at', { ascending: true });
+  let data = null, error = null;
+  try {
+    data = await supabaseGet(
+      `profiles?company_id=eq.${S.profile.company_id}&select=id,full_name,email,role,functie,status,created_at&order=created_at.asc`
+    );
+  } catch (e) {
+    error = e;
+  }
 
   if (error) {
     list.innerHTML = `<div class="member-list-empty">Fout: ${escapeHtml(error.message)}</div>`;
@@ -3016,8 +3229,7 @@ function askRemoveMember(userId) {
 }
 
 async function confirmRemoveMember(userId) {
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) { toast('Niet ingelogd'); return; }
+  if (!cachedSession) { toast('Niet ingelogd'); return; }
 
   const actionEl = document.getElementById('member-action-' + userId);
   if (actionEl) actionEl.innerHTML = '<span style="font-size:12px;color:var(--ink-3)">Bezig…</span>';
@@ -3027,7 +3239,7 @@ async function confirmRemoveMember(userId) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${session.access_token}`,
+        Authorization: `Bearer ${cachedSession.access_token}`,
       },
       body: JSON.stringify({ userId }),
     });
@@ -3071,8 +3283,7 @@ async function inviteMember() {
   submitBtn.disabled = true;
   submitLabel.innerHTML = '<div class="spinner"></div>';
 
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) {
+  if (!cachedSession) {
     errorEl.textContent = 'Niet ingelogd';
     errorEl.classList.add('show');
     submitBtn.disabled = false;
@@ -3085,7 +3296,7 @@ async function inviteMember() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${session.access_token}`,
+        Authorization: `Bearer ${cachedSession.access_token}`,
       },
       body: JSON.stringify({ naam, email, functie }),
     });
@@ -3124,15 +3335,14 @@ async function openPortal() {
   const prev = btn?.textContent;
   if (btn) { btn.textContent = 'Bezig…'; btn.disabled = true; }
 
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) { toast('Niet ingelogd'); if (btn){btn.textContent=prev;btn.disabled=false;} return; }
+  if (!cachedSession) { toast('Niet ingelogd'); if (btn){btn.textContent=prev;btn.disabled=false;} return; }
 
   try {
     const r = await fetch('/.netlify/functions/create-portal', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${session.access_token}`,
+        Authorization: `Bearer ${cachedSession.access_token}`,
       },
       body: JSON.stringify({ companyId: S.profile.company_id }),
     });
