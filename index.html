@@ -1911,29 +1911,50 @@ const S = {
 async function initApp() {
   startClock();
 
-  const { data: { session } } = await sb.auth.getSession();
+  try {
+    const { data: { session }, error } = await sb.auth.getSession();
 
-  if (session) {
-    await loadProfileAndRoute(session.user);
-    return;
-  }
-
-  const params = new URLSearchParams(window.location.search);
-  const hashParams = new URLSearchParams(window.location.hash.substring(1));
-
-  if (hashParams.get('access_token') || params.get('code')) {
-    const { data } = await sb.auth.getSession();
-    if (data.session) {
-      await loadProfileAndRoute(data.session.user);
-    } else {
+    if (error) {
+      console.error('getSession error:', error);
       showAuth();
+      return;
     }
-  } else {
+
+    if (session) {
+      await loadProfileAndRoute(session.user);
+    } else {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const params = new URLSearchParams(window.location.search);
+
+      if (hashParams.get('access_token') || params.get('code')) {
+        const { data, error: sessionError } = await sb.auth.getSession();
+        if (data?.session) {
+          await loadProfileAndRoute(data.session.user);
+        } else {
+          console.error('Session after callback failed:', sessionError);
+          showAuth();
+        }
+      } else {
+        showAuth();
+      }
+    }
+  } catch (e) {
+    console.error('initApp crashed:', e);
     showAuth();
   }
 }
 
 initApp();
+
+// Safety net: if nothing has rendered after 5s, force the login screen.
+setTimeout(() => {
+  const authScreen = document.getElementById('screen-auth');
+  const isVisible = authScreen && authScreen.style.display !== 'none';
+  if (!isVisible) {
+    console.warn('App load timeout — forcing login screen');
+    showAuth();
+  }
+}, 5000);
 
 sb.auth.onAuthStateChange(async (event, session) => {
   if (event === 'SIGNED_IN' && session) {
@@ -1992,6 +2013,8 @@ function showAuth() {
   hideLoading();
   hideAllScreens();
   document.getElementById('screen-auth').style.display = 'flex';
+  const spinner = document.getElementById('app-spinner');
+  if (spinner) spinner.style.display = 'none';
 }
 
 function hideLoading() {
