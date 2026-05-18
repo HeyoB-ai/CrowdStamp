@@ -1951,28 +1951,28 @@ if (typeof supabase === 'undefined') {
   console.log('Auth listener registered, calling initApp...');
 
   initApp();
-
-  // Safety timeout: if the loading overlay is still visible after 8s, force login.
-  setTimeout(() => {
-    const overlay = document.getElementById('loading-overlay');
-    if (overlay && overlay.style.display !== 'none' &&
-        getComputedStyle(overlay).display !== 'none') {
-      console.warn('Safety timeout — showing login');
-      showAuth();
-    }
-  }, 8000);
 }
 
 async function loadProfileAndRoute(authUser) {
+  hideLoading(); // hide spinner immediately on auth success
   console.log('loadProfileAndRoute called for:', authUser.id, authUser.email);
 
   try {
     console.log('Fetching profile...');
-    const { data: profile, error: profileError } = await sb
+    const profilePromise = sb
       .from('profiles')
       .select('*')
       .eq('id', authUser.id)
       .single();
+
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Profile query timeout')), 10000)
+    );
+
+    const { data: profile, error: profileError } = await Promise.race([
+      profilePromise,
+      timeoutPromise
+    ]).catch(e => ({ data: null, error: e }));
 
     console.log('Profile result:', { profile, error: profileError?.message });
 
