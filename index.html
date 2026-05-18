@@ -1889,7 +1889,21 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    storage: window.localStorage
+    storageKey: 'crowdstamp-auth',
+    storage: {
+      getItem: (key) => {
+        try { return window.localStorage.getItem(key); }
+        catch (e) { return null; }
+      },
+      setItem: (key, value) => {
+        try { window.localStorage.setItem(key, value); }
+        catch (e) {}
+      },
+      removeItem: (key) => {
+        try { window.localStorage.removeItem(key); }
+        catch (e) {}
+      }
+    }
   }
 });
 console.log('sb created:', typeof sb, typeof sb.auth);
@@ -1912,22 +1926,9 @@ const S = {
 // ════════════════════════════════════════════════════════
 async function initApp() {
   startClock();
-  try {
-    console.log('Calling getSession...');
-    const { data, error } = await sb.auth.getSession();
-    console.log('getSession returned:', {
-      hasSession: !!data?.session,
-      error: error?.message
-    });
-    if (data?.session) {
-      await loadProfileAndRoute(data.session.user);
-    }
-    // If no session, onAuthStateChange will handle it
-    // Don't call showAuth() here — wait for INITIAL_SESSION
-  } catch (e) {
-    console.error('initApp crashed:', e);
-    showAuth();
-  }
+  console.log('initApp: waiting for auth state...');
+  // onAuthStateChange handles everything including INITIAL_SESSION.
+  // No need to call getSession() separately.
 }
 
 if (typeof supabase === 'undefined') {
@@ -1939,7 +1940,7 @@ if (typeof supabase === 'undefined') {
   console.log('Registering auth state listener...');
   sb.auth.onAuthStateChange(async (event, session) => {
     console.log('Auth state change:', event, session?.user?.id);
-    if (event === 'SIGNED_IN' && session) {
+    if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
       await loadProfileAndRoute(session.user);
     } else if (event === 'INITIAL_SESSION' && !session) {
       showAuth();
@@ -1950,6 +1951,16 @@ if (typeof supabase === 'undefined') {
   console.log('Auth listener registered, calling initApp...');
 
   initApp();
+
+  // Safety timeout: if the loading overlay is still visible after 8s, force login.
+  setTimeout(() => {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay && overlay.style.display !== 'none' &&
+        getComputedStyle(overlay).display !== 'none') {
+      console.warn('Safety timeout — showing login');
+      showAuth();
+    }
+  }, 8000);
 }
 
 async function loadProfileAndRoute(authUser) {
