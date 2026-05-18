@@ -1908,6 +1908,10 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 });
 console.log('sb created:', typeof sb, typeof sb.auth);
 
+// Cached session — populated by onAuthStateChange, used by all direct REST fetches
+// to bypass the Supabase JS SDK (which hangs on localStorage locks in some browsers).
+let cachedSession = null;
+
 // ════════════════════════════════════════════════════════
 // State
 // ════════════════════════════════════════════════════════
@@ -1940,11 +1944,13 @@ if (typeof supabase === 'undefined') {
   console.log('Registering auth state listener...');
   sb.auth.onAuthStateChange(async (event, session) => {
     console.log('Auth state change:', event, session?.user?.id);
+    if (session) cachedSession = session;
     if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
       await loadProfileAndRoute(session.user);
     } else if (event === 'INITIAL_SESSION' && !session) {
       showAuth();
     } else if (event === 'SIGNED_OUT') {
+      cachedSession = null;
       showAuth();
     }
   });
@@ -1958,69 +1964,39 @@ async function loadProfileAndRoute(authUser) {
   console.log('loadProfileAndRoute called for:', authUser.id, authUser.email);
 
   try {
-    console.log('Fetching profile...');
-    const profilePromise = sb
-      .from('profiles')
-      .select('*')
-      .eq('id', authUser.id)
-      .limit(1)
-      .then(({ data, error }) => ({
-        data: data?.[0] || null,
-        error
-      }));
+    console.log('Fetching profile via REST...');
+    let profile = null;
+    let profileError = null;
 
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Profile query timeout')), 10000)
-    );
+    try {
+      const token = cachedSession?.access_token;
+      if (!token) throw new Error('No cached session');
 
-    let { data: profile, error: profileError } = await Promise.race([
-      profilePromise,
-      timeoutPromise
-    ]).catch(e => ({ data: null, error: e }));
-
-    console.log('Profile result:', { profile, error: profileError?.message });
-
-    if (!profile) {
-      console.log('Trying direct REST API fallback...');
-      try {
-        // Race getSession against a short timeout so the fallback can't hang the same way.
-        const sessionResult = await Promise.race([
-          sb.auth.getSession(),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('getSession timeout in fallback')), 3000)
-          )
-        ]).catch(e => ({ data: { session: null }, error: e }));
-        const session = sessionResult?.data?.session;
-        if (!session) {
-          console.error('REST fallback: no session available');
-        } else {
-          const res = await fetch(
-            `${SUPABASE_URL}/rest/v1/profiles?id=eq.${authUser.id}&limit=1`,
-            {
-              headers: {
-                'apikey': SUPABASE_ANON_KEY,
-                'Authorization': `Bearer ${session.access_token}`,
-                'Accept': 'application/json'
-              }
-            }
-          );
-          const rows = await res.json();
-          console.log('REST fallback result:', rows);
-          if (rows?.[0]) {
-            profile = rows[0];
-            profileError = null;
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/profiles?id=eq.${authUser.id}&limit=1`,
+        {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
           }
         }
-      } catch (e) {
-        console.error('REST fallback failed:', e);
-      }
+      );
+      const rows = await res.json();
+      console.log('Profile REST result:', rows);
+      profile = rows?.[0] || null;
+      if (!profile) profileError = { message: 'Profiel niet gevonden' };
+    } catch (e) {
+      console.error('Profile fetch failed:', e);
+      profileError = e;
     }
 
     if (profileError || !profile) {
       console.error('Profile not found:', profileError?.message);
       showAuth();
       showAuthError(profileError?.message || 'Profiel niet gevonden. Neem contact op met je beheerder.');
-      await sb.auth.signOut();
+      cachedSession = null;
       return;
     }
 
@@ -2029,17 +2005,29 @@ async function loadProfileAndRoute(authUser) {
 
     console.log('Profile role:', profile.role);
 
-    // Fetch company for trial-expiry check.
+    // Fetch company for trial-expiry check via direct REST.
     // Requires an RLS policy on `companies` that allows a member to read their own company row.
     // If the read is blocked, we fail open (let the user in) rather than locking everyone out.
     if (profile.company_id) {
-      const { data: company, error: companyError } = await sb
-        .from('companies')
-        .select('name, plan, status, trial_ends_at')
-        .eq('id', profile.company_id)
-        .single();
-      console.log('Company result:', { company, error: companyError?.message });
-      S.company = company || null;
+      let company = null;
+      try {
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/companies?id=eq.${profile.company_id}&limit=1`,
+          {
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${cachedSession.access_token}`,
+              'Accept': 'application/json'
+            }
+          }
+        );
+        const rows = await res.json();
+        company = rows?.[0] || null;
+        console.log('Company REST result:', company);
+      } catch (e) {
+        console.error('Company fetch failed:', e);
+      }
+      S.company = company;
 
       if (company && company.plan === 'trial' && company.trial_ends_at) {
         const endsAt = new Date(company.trial_ends_at);
@@ -2147,7 +2135,16 @@ async function doLogin() {
 }
 
 async function doLogout() {
-  await sb.auth.signOut();
+  try {
+    await fetch(`${SUPABASE_URL}/auth/v1/logout`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${cachedSession?.access_token}`
+      }
+    });
+  } catch (e) {}
+  cachedSession = null;
   S.profile = null; S.email = null;
   resetWorkerState();
   showAuth();
