@@ -1894,6 +1894,13 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 });
 console.log('sb created:', typeof sb, typeof sb.auth);
 
+// Network reachability test — confirms the Supabase project is responding from this client.
+fetch('https://ojowaqxivoegmngkoztk.supabase.co/rest/v1/', {
+  headers: { 'apikey': SUPABASE_ANON_KEY }
+})
+  .then(r => console.log('Supabase network test:', r.status))
+  .catch(e => console.error('Supabase network FAILED:', e.message));
+
 // ════════════════════════════════════════════════════════
 // State
 // ════════════════════════════════════════════════════════
@@ -1913,9 +1920,26 @@ const S = {
 async function initApp() {
   startClock();
 
+  const getSessionWithTimeout = () => new Promise(async (resolve) => {
+    const timeout = setTimeout(() => {
+      console.error('getSession timed out after 5s — network issue');
+      resolve({ data: { session: null }, error: { message: 'timeout' } });
+    }, 5000);
+
+    try {
+      const result = await sb.auth.getSession();
+      clearTimeout(timeout);
+      resolve(result);
+    } catch (e) {
+      clearTimeout(timeout);
+      console.error('getSession threw:', e);
+      resolve({ data: { session: null }, error: e });
+    }
+  });
+
   try {
     console.log('Calling getSession...');
-    const { data, error } = await sb.auth.getSession();
+    const { data, error } = await getSessionWithTimeout();
     console.log('getSession returned:', {
       hasSession: !!data?.session,
       error: error?.message
