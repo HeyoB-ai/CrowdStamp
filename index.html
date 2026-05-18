@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
@@ -1914,12 +1914,13 @@ async function initApp() {
   startClock();
 
   try {
-    const { data: { session }, error } = await sb.auth.getSession();
-    console.log('Session check result:', {
-      session: session ? 'EXISTS' : 'NULL',
-      error: error?.message,
-      userId: session?.user?.id
+    console.log('Calling getSession...');
+    const { data, error } = await sb.auth.getSession();
+    console.log('getSession returned:', {
+      hasSession: !!data?.session,
+      error: error?.message
     });
+    const session = data?.session;
 
     if (error) {
       console.error('getSession error:', error);
@@ -1957,7 +1958,7 @@ if (typeof supabase === 'undefined') {
 } else {
   console.log('Supabase loaded OK');
 
-  // Register auth state listener BEFORE initApp so INITIAL_SESSION is caught.
+  console.log('Registering auth state listener...');
   sb.auth.onAuthStateChange(async (event, session) => {
     console.log('Auth state change:', event, session?.user?.id);
     if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
@@ -1968,6 +1969,7 @@ if (typeof supabase === 'undefined') {
       showAuth();
     }
   });
+  console.log('Auth listener registered, calling initApp...');
 
   initApp();
 }
