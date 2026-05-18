@@ -1963,18 +1963,58 @@ async function loadProfileAndRoute(authUser) {
       .from('profiles')
       .select('*')
       .eq('id', authUser.id)
-      .single();
+      .limit(1)
+      .then(({ data, error }) => ({
+        data: data?.[0] || null,
+        error
+      }));
 
     const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => reject(new Error('Profile query timeout')), 10000)
     );
 
-    const { data: profile, error: profileError } = await Promise.race([
+    let { data: profile, error: profileError } = await Promise.race([
       profilePromise,
       timeoutPromise
     ]).catch(e => ({ data: null, error: e }));
 
     console.log('Profile result:', { profile, error: profileError?.message });
+
+    if (!profile) {
+      console.log('Trying direct REST API fallback...');
+      try {
+        // Race getSession against a short timeout so the fallback can't hang the same way.
+        const sessionResult = await Promise.race([
+          sb.auth.getSession(),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('getSession timeout in fallback')), 3000)
+          )
+        ]).catch(e => ({ data: { session: null }, error: e }));
+        const session = sessionResult?.data?.session;
+        if (!session) {
+          console.error('REST fallback: no session available');
+        } else {
+          const res = await fetch(
+            `${SUPABASE_URL}/rest/v1/profiles?id=eq.${authUser.id}&limit=1`,
+            {
+              headers: {
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${session.access_token}`,
+                'Accept': 'application/json'
+              }
+            }
+          );
+          const rows = await res.json();
+          console.log('REST fallback result:', rows);
+          if (rows?.[0]) {
+            profile = rows[0];
+            profileError = null;
+          }
+        }
+      } catch (e) {
+        console.error('REST fallback failed:', e);
+      }
+    }
 
     if (profileError || !profile) {
       console.error('Profile not found:', profileError?.message);
