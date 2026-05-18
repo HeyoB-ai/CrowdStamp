@@ -1894,13 +1894,6 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 });
 console.log('sb created:', typeof sb, typeof sb.auth);
 
-// Network reachability test — confirms the Supabase project is responding from this client.
-fetch('https://ojowaqxivoegmngkoztk.supabase.co/rest/v1/', {
-  headers: { 'apikey': SUPABASE_ANON_KEY }
-})
-  .then(r => console.log('Supabase network test:', r.status))
-  .catch(e => console.error('Supabase network FAILED:', e.message));
-
 // ════════════════════════════════════════════════════════
 // State
 // ════════════════════════════════════════════════════════
@@ -1919,57 +1912,18 @@ const S = {
 // ════════════════════════════════════════════════════════
 async function initApp() {
   startClock();
-
-  const getSessionWithTimeout = () => new Promise(async (resolve) => {
-    const timeout = setTimeout(() => {
-      console.error('getSession timed out after 5s — network issue');
-      resolve({ data: { session: null }, error: { message: 'timeout' } });
-    }, 5000);
-
-    try {
-      const result = await sb.auth.getSession();
-      clearTimeout(timeout);
-      resolve(result);
-    } catch (e) {
-      clearTimeout(timeout);
-      console.error('getSession threw:', e);
-      resolve({ data: { session: null }, error: e });
-    }
-  });
-
   try {
     console.log('Calling getSession...');
-    const { data, error } = await getSessionWithTimeout();
+    const { data, error } = await sb.auth.getSession();
     console.log('getSession returned:', {
       hasSession: !!data?.session,
       error: error?.message
     });
-    const session = data?.session;
-
-    if (error) {
-      console.error('getSession error:', error);
-      showAuth();
-      return;
+    if (data?.session) {
+      await loadProfileAndRoute(data.session.user);
     }
-
-    if (session) {
-      await loadProfileAndRoute(session.user);
-    } else {
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const params = new URLSearchParams(window.location.search);
-
-      if (hashParams.get('access_token') || params.get('code')) {
-        const { data, error: sessionError } = await sb.auth.getSession();
-        if (data?.session) {
-          await loadProfileAndRoute(data.session.user);
-        } else {
-          console.error('Session after callback failed:', sessionError);
-          showAuth();
-        }
-      } else {
-        showAuth();
-      }
-    }
+    // If no session, onAuthStateChange will handle it
+    // Don't call showAuth() here — wait for INITIAL_SESSION
   } catch (e) {
     console.error('initApp crashed:', e);
     showAuth();
@@ -1985,10 +1939,10 @@ if (typeof supabase === 'undefined') {
   console.log('Registering auth state listener...');
   sb.auth.onAuthStateChange(async (event, session) => {
     console.log('Auth state change:', event, session?.user?.id);
-    if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-      if (session) {
-        await loadProfileAndRoute(session.user);
-      }
+    if (event === 'SIGNED_IN' && session) {
+      await loadProfileAndRoute(session.user);
+    } else if (event === 'INITIAL_SESSION' && !session) {
+      showAuth();
     } else if (event === 'SIGNED_OUT') {
       showAuth();
     }
