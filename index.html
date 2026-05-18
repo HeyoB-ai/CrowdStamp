@@ -1877,6 +1877,7 @@ svg{display:block}
 <div class="toast" id="toast"></div>
 
 <script>
+console.log('Script loaded, calling initApp');
 // ════════════════════════════════════════════════════════
 // Supabase config
 // ════════════════════════════════════════════════════════
@@ -1944,13 +1945,19 @@ async function initApp() {
   }
 }
 
-initApp();
+if (typeof supabase === 'undefined') {
+  console.error('Supabase CDN failed to load');
+  document.body.innerHTML = '<div style="padding:2rem;font-family:sans-serif"><h2>Laad fout</h2><p>Herlaad de pagina.</p><button onclick="location.reload()">Herladen</button></div>';
+} else {
+  console.log('Supabase loaded OK');
+  initApp();
+}
 
-// Safety net: if nothing has rendered after 5s, force the login screen.
+// Safety net: if the loading overlay is still visible after 5s, force the login screen.
 setTimeout(() => {
-  const authScreen = document.getElementById('screen-auth');
-  const isVisible = authScreen && authScreen.style.display !== 'none';
-  if (!isVisible) {
+  const overlay = document.getElementById('loading-overlay');
+  const stillLoading = overlay && getComputedStyle(overlay).display !== 'none';
+  if (stillLoading) {
     console.warn('App load timeout — forcing login screen');
     showAuth();
   }
