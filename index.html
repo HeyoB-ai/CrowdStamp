@@ -1883,7 +1883,14 @@ svg{display:block}
 const SUPABASE_URL = 'https://ojowaqxivoegmngkoztk.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qb3dhcXhpdm9lZ21uZ2tvenRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2ODczNTgsImV4cCI6MjA5NDI2MzM1OH0.XTzdUPUWvqpny4mVknaauGXt3olNC0Lyo-2pbQnVj8M';
 
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storage: window.localStorage
+  }
+});
 
 // ════════════════════════════════════════════════════════
 // State
@@ -1901,15 +1908,41 @@ const S = {
 // ════════════════════════════════════════════════════════
 // Init / auth flow
 // ════════════════════════════════════════════════════════
-(async function init() {
+async function initApp() {
   startClock();
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) return showAuth();
-  await loadProfileAndRoute(session.user);
-})();
 
-sb.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_OUT') showAuth();
+  const { data: { session } } = await sb.auth.getSession();
+
+  if (session) {
+    await loadProfileAndRoute(session.user);
+    return;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const hashParams = new URLSearchParams(window.location.hash.substring(1));
+
+  if (hashParams.get('access_token') || params.get('code')) {
+    const { data } = await sb.auth.getSession();
+    if (data.session) {
+      await loadProfileAndRoute(data.session.user);
+    } else {
+      showAuth();
+    }
+  } else {
+    showAuth();
+  }
+}
+
+initApp();
+
+sb.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN' && session) {
+    await loadProfileAndRoute(session.user);
+  } else if (event === 'SIGNED_OUT') {
+    showAuth();
+  } else if (event === 'TOKEN_REFRESHED' && session) {
+    // Session refreshed silently — no action needed
+  }
 });
 
 async function loadProfileAndRoute(authUser) {
