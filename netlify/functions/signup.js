@@ -135,12 +135,14 @@ exports.handler = async (event) => {
       }
       const msg = (inviteErr.message || '').toLowerCase();
       if (msg.includes('already') || msg.includes('registered') || inviteErr.status === 422) {
-        return respond(400, { error: 'Dit e-mailadres is al geregistreerd', step });
+        return respond(400, { error: 'Dit e-mailadres is al geregistreerd', step, code: inviteErr.code });
       }
-      return respond(500, {
+      // Return the exact Supabase error so the browser can show what's wrong
+      // (e.g. "Email address is invalid" → check Auth → Settings → email restrictions).
+      return respond(400, {
         error: inviteErr.message || 'Uitnodiging versturen mislukt',
+        code: inviteErr.code,
         step,
-        details: inviteErr,
       });
     }
 
