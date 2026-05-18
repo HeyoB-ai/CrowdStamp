@@ -1964,39 +1964,68 @@ if (typeof supabase === 'undefined') {
 }
 
 async function loadProfileAndRoute(authUser) {
-  const { data, error } = await sb.from('profiles').select('*').eq('id', authUser.id).single();
-  if (error || !data) {
-    showAuth();
-    showAuthError(error?.message || 'Profiel niet gevonden');
-    await sb.auth.signOut();
-    return;
-  }
-  S.profile = data;
-  S.email = authUser.email;
+  console.log('loadProfileAndRoute called for:', authUser.id, authUser.email);
 
-  // Fetch company for trial-expiry check.
-  // Requires an RLS policy on `companies` that allows a member to read their own company row.
-  // If the read is blocked, we fail open (let the user in) rather than locking everyone out.
-  if (data.company_id) {
-    const { data: company } = await sb
-      .from('companies')
-      .select('name, plan, status, trial_ends_at')
-      .eq('id', data.company_id)
+  try {
+    console.log('Fetching profile...');
+    const { data: profile, error: profileError } = await sb
+      .from('profiles')
+      .select('*')
+      .eq('id', authUser.id)
       .single();
-    S.company = company || null;
 
-    if (company && company.plan === 'trial' && company.trial_ends_at) {
-      const endsAt = new Date(company.trial_ends_at);
-      if (!isNaN(endsAt.getTime()) && endsAt.getTime() < Date.now()) {
-        showTrialExpired();
-        return;
+    console.log('Profile result:', { profile, error: profileError?.message });
+
+    if (profileError || !profile) {
+      console.error('Profile not found:', profileError?.message);
+      showAuth();
+      showAuthError(profileError?.message || 'Profiel niet gevonden. Neem contact op met je beheerder.');
+      await sb.auth.signOut();
+      return;
+    }
+
+    S.profile = profile;
+    S.email = authUser.email;
+
+    console.log('Profile role:', profile.role);
+
+    // Fetch company for trial-expiry check.
+    // Requires an RLS policy on `companies` that allows a member to read their own company row.
+    // If the read is blocked, we fail open (let the user in) rather than locking everyone out.
+    if (profile.company_id) {
+      const { data: company, error: companyError } = await sb
+        .from('companies')
+        .select('name, plan, status, trial_ends_at')
+        .eq('id', profile.company_id)
+        .single();
+      console.log('Company result:', { company, error: companyError?.message });
+      S.company = company || null;
+
+      if (company && company.plan === 'trial' && company.trial_ends_at) {
+        const endsAt = new Date(company.trial_ends_at);
+        if (!isNaN(endsAt.getTime()) && endsAt.getTime() < Date.now()) {
+          showTrialExpired();
+          return;
+        }
       }
     }
-  }
 
-  hideLoading();
-  if (data.role === 'worker') showWorker();
-  else showAdmin();
+    hideLoading();
+    if (profile.role === 'worker') {
+      console.log('Routing to worker view...');
+      showWorker();
+    } else if (profile.role === 'admin' || profile.role === 'superuser') {
+      console.log('Routing to admin view...');
+      showAdmin();
+    } else {
+      console.error('Unknown role:', profile.role);
+      showAuth();
+      showAuthError('Onbekende rol. Neem contact op met je beheerder.');
+    }
+  } catch (e) {
+    console.error('loadProfileAndRoute crashed:', e);
+    showAuth();
+  }
 }
 
 function hideAllScreens() {
