@@ -1914,6 +1914,11 @@ async function initApp() {
 
   try {
     const { data: { session }, error } = await sb.auth.getSession();
+    console.log('Session check result:', {
+      session: session ? 'EXISTS' : 'NULL',
+      error: error?.message,
+      userId: session?.user?.id
+    });
 
     if (error) {
       console.error('getSession error:', error);
@@ -1950,28 +1955,21 @@ if (typeof supabase === 'undefined') {
   document.body.innerHTML = '<div style="padding:2rem;font-family:sans-serif"><h2>Laad fout</h2><p>Herlaad de pagina.</p><button onclick="location.reload()">Herladen</button></div>';
 } else {
   console.log('Supabase loaded OK');
+
+  // Register auth state listener BEFORE initApp so INITIAL_SESSION is caught.
+  sb.auth.onAuthStateChange(async (event, session) => {
+    console.log('Auth state change:', event, session?.user?.id);
+    if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+      if (session) {
+        await loadProfileAndRoute(session.user);
+      }
+    } else if (event === 'SIGNED_OUT') {
+      showAuth();
+    }
+  });
+
   initApp();
 }
-
-// Safety net: if the loading overlay is still visible after 5s, force the login screen.
-setTimeout(() => {
-  const overlay = document.getElementById('loading-overlay');
-  const stillLoading = overlay && getComputedStyle(overlay).display !== 'none';
-  if (stillLoading) {
-    console.warn('App load timeout — forcing login screen');
-    showAuth();
-  }
-}, 5000);
-
-sb.auth.onAuthStateChange(async (event, session) => {
-  if (event === 'SIGNED_IN' && session) {
-    await loadProfileAndRoute(session.user);
-  } else if (event === 'SIGNED_OUT') {
-    showAuth();
-  } else if (event === 'TOKEN_REFRESHED' && session) {
-    // Session refreshed silently — no action needed
-  }
-});
 
 async function loadProfileAndRoute(authUser) {
   const { data, error } = await sb.from('profiles').select('*').eq('id', authUser.id).single();
