@@ -1942,9 +1942,13 @@ if (typeof supabase === 'undefined') {
   console.log('Supabase loaded OK');
 
   console.log('Registering auth state listener...');
+  let authResolved = false;
+
   sb.auth.onAuthStateChange(async (event, session) => {
     console.log('Auth state change:', event, session?.user?.id);
+    authResolved = true;
     if (session) cachedSession = session;
+
     if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
       await loadProfileAndRoute(session.user);
     } else if (event === 'INITIAL_SESSION' && !session) {
@@ -1954,6 +1958,14 @@ if (typeof supabase === 'undefined') {
       showAuth();
     }
   });
+
+  setTimeout(() => {
+    if (!authResolved) {
+      console.log('Auth timeout — showing login');
+      showAuth();
+    }
+  }, 3000);
+
   console.log('Auth listener registered, calling initApp...');
 
   initApp();
