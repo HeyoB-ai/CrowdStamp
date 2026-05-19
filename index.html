@@ -2204,9 +2204,9 @@ async function supabasePatch(table, id, body) {
   return res.json();
 }
 
-async function loadProfileAndRoute(authUser) {
+async function loadProfileAndRoute(authUser, showErrors = false) {
   hideLoading(); // hide spinner immediately on auth success
-  console.log('loadProfileAndRoute called for:', authUser.id, authUser.email);
+  console.log('loadProfileAndRoute called for:', authUser.id, authUser.email, '(showErrors:', showErrors, ')');
 
   try {
     console.log('Fetching profile via REST...');
@@ -2239,9 +2239,11 @@ async function loadProfileAndRoute(authUser) {
 
     if (profileError || !profile) {
       console.error('Profile not found:', profileError?.message);
-      showAuth();
-      showAuthError(profileError?.message || 'Profiel niet gevonden. Neem contact op met je beheerder.');
       cachedSession = null;
+      showAuth();
+      if (showErrors) {
+        showAuthError(profileError?.message || 'Profiel niet gevonden. Neem contact op met je beheerder.');
+      }
       return;
     }
 
@@ -2296,7 +2298,9 @@ async function loadProfileAndRoute(authUser) {
     } else {
       console.error('Unknown role:', profile.role);
       showAuth();
-      showAuthError('Onbekende rol. Neem contact op met je beheerder.');
+      if (showErrors) {
+        showAuthError('Onbekende rol. Neem contact op met je beheerder.');
+      }
     }
   } catch (e) {
     console.error('loadProfileAndRoute crashed:', e);
@@ -2317,6 +2321,9 @@ function showAuth() {
   document.getElementById('screen-auth').style.display = 'flex';
   const spinner = document.getElementById('app-spinner');
   if (spinner) spinner.style.display = 'none';
+  // Clear any previous error so auto-login failures don't leak onto the login screen.
+  const errorEl = document.getElementById('auth-error');
+  if (errorEl) errorEl.classList.remove('show');
 }
 
 function hideLoading() {
@@ -2486,7 +2493,7 @@ async function doLogin() {
   if (data.session) {
     cachedSession = data.session;
   }
-  await loadProfileAndRoute(data.user);
+  await loadProfileAndRoute(data.user, true);
 }
 
 async function doLogout() {
