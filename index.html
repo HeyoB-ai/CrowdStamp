@@ -1404,9 +1404,11 @@ svg{display:block}
 .su-chart-bars{
   display:flex;
   align-items:flex-end;
-  gap:8px;
-  height:160px;
-  padding:16px 0 0;
+  gap:12px;
+  height:200px;
+  padding:24px 0 0;
+  border-bottom:1px solid var(--line);
+  position:relative;
 }
 .su-chart-col{
   flex:1;
@@ -1415,33 +1417,41 @@ svg{display:block}
   align-items:center;
   gap:8px;
   height:100%;
+  justify-content:flex-end;
 }
 .su-chart-bar-wrap{
-  flex:1;
-  width:100%;
+  width:60%;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:flex-end;
   gap:4px;
+  height:100%;
 }
 .su-chart-bar{
   width:100%;
   background:var(--line);
-  border-radius:4px 4px 0 0;
-  min-height:2px;
-  transition:height 0.3s;
+  border-radius:6px 6px 0 0;
+  min-height:3px;
+  transition:height 0.4s ease;
 }
-.su-chart-bar.today{background:var(--accent)}
+.su-chart-bar.today{
+  background:var(--accent);
+}
+.su-chart-bar:hover{
+  opacity:0.8;
+}
 .su-chart-count{
   font-size:11px;
-  font-weight:600;
+  font-weight:700;
   color:var(--ink-2);
+  min-height:16px;
 }
 .su-chart-label{
   font-size:11px;
   color:var(--ink-3);
   white-space:nowrap;
+  padding-top:6px;
 }
 .su-chart-label.today{
   color:var(--accent);
