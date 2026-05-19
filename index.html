@@ -1430,7 +1430,7 @@ svg{display:block}
 }
 .su-chart-bar{
   width:100%;
-  background:var(--line);
+  background:#D0CCC4;
   border-radius:6px 6px 0 0;
   min-height:3px;
   transition:height 0.4s ease;
@@ -3483,14 +3483,19 @@ function renderSuperuserChart(regs) {
     const count = countByDate[day.dateStr] || 0;
     const heightPct = Math.round((count / maxCount) * 100);
     const isToday = day.isToday;
+    // Today + zero check-ins: render a 4px placeholder so the column stays visible.
+    const barStyle = isToday && count === 0
+      ? 'height:4px;min-height:4px'
+      : `height:${heightPct}%`;
+    const labelStyle = isToday && count === 0 ? 'font-style:italic' : '';
     return `
       <div class="su-chart-col">
         <div class="su-chart-bar-wrap">
           <div class="su-chart-count">${count > 0 ? count : ''}</div>
           <div class="su-chart-bar ${isToday ? 'today' : ''}"
-               style="height:${heightPct}%"></div>
+               style="${barStyle}"></div>
         </div>
-        <div class="su-chart-label ${isToday ? 'today' : ''}">${day.dayName}</div>
+        <div class="su-chart-label ${isToday ? 'today' : ''}" style="${labelStyle}">${day.dayName}</div>
       </div>
     `;
   }).join('');
