@@ -1401,28 +1401,51 @@ select.filter-input{cursor:pointer}
 svg{display:block}
 
 /* ── Superuser dashboard ── */
-.su-chart{
-  display:flex;align-items:flex-end;gap:10px;
-  height:180px;padding:24px 4px 4px;
-  border-top:1px solid var(--line);
-  margin-top:8px
+.su-chart-bars{
+  display:flex;
+  align-items:flex-end;
+  gap:8px;
+  height:160px;
+  padding:16px 0 0;
 }
-.su-chart-col{flex:1;display:flex;flex-direction:column;align-items:stretch;min-width:0}
+.su-chart-col{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  height:100%;
+}
+.su-chart-bar-wrap{
+  flex:1;
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-end;
+  gap:4px;
+}
 .su-chart-bar{
-  background:rgba(15,15,15,0.08);
+  width:100%;
+  background:var(--line);
   border-radius:4px 4px 0 0;
-  position:relative;min-height:2px;
-  transition:background 0.15s
+  min-height:2px;
+  transition:height 0.3s;
 }
-.su-chart-bar:hover{background:var(--accent)}
-.su-chart-bar:hover .su-chart-value{display:block}
-.su-chart-value{
-  display:none;font-size:11px;font-weight:600;color:var(--ink);
-  position:absolute;top:-20px;left:0;right:0;text-align:center
+.su-chart-bar.today{background:var(--accent)}
+.su-chart-count{
+  font-size:11px;
+  font-weight:600;
+  color:var(--ink-2);
 }
-.su-chart-day{
-  font-size:11px;color:var(--ink-3);text-align:center;
-  margin-top:6px;letter-spacing:-0.005em
+.su-chart-label{
+  font-size:11px;
+  color:var(--ink-3);
+  white-space:nowrap;
+}
+.su-chart-label.today{
+  color:var(--accent);
+  font-weight:600;
 }
 .su-badge{
   display:inline-block;padding:3px 9px;border-radius:6px;
@@ -1988,7 +2011,7 @@ svg{display:block}
         <div class="member-card-head" style="margin-bottom:8px">
           <h2 class="member-card-title" style="margin-bottom:0">Check-ins per dag — laatste 7 dagen</h2>
         </div>
-        <div class="su-chart" id="su-chart">
+        <div class="su-chart-bars" id="su-chart-bars">
           <div style="margin:auto;color:var(--ink-3);font-size:13px">Laden…</div>
         </div>
       </div>
@@ -3409,39 +3432,55 @@ async function loadSuperuserData() {
   document.getElementById('su-stat-users').textContent = SU.users.length;
   document.getElementById('su-stat-today').textContent = checkInsToday;
 
-  renderSuperuserChart();
+  renderSuperuserChart(SU.registrations);
   populateUserCompanyFilter();
   renderSuperuserCompanies();
   renderSuperuserUsers();
 }
 
-function renderSuperuserChart() {
-  const chart = document.getElementById('su-chart');
-  // Build a count per day for the last 7 days (oldest → newest)
+function renderSuperuserChart(regs) {
+  const container = document.getElementById('su-chart-bars');
+  if (!container) return;
+
+  // Build 7-day array using local dates
   const days = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
-    days.push(isoDate(d));
+    const dateStr = [
+      d.getFullYear(),
+      String(d.getMonth() + 1).padStart(2, '0'),
+      String(d.getDate()).padStart(2, '0')
+    ].join('-');
+    const dayName = d.toLocaleDateString('nl-NL', {
+      weekday: 'short', day: 'numeric'
+    });
+    days.push({ dateStr, dayName, isToday: i === 0 });
   }
-  const counts = days.map(date => SU.registrations.filter(r => r.date === date).length);
-  const max = Math.max(1, ...counts);
-  const todayStr = isoDate(new Date());
 
-  chart.innerHTML = days.map((date, i) => {
-    const c = counts[i];
-    const heightPct = (c / max) * 100;
-    const isToday = date === todayStr;
-    const d = new Date(date + 'T00:00:00');
-    const label = d.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric' });
+  // Count registrations per date
+  const countByDate = {};
+  regs.forEach(r => {
+    if (r.date) countByDate[r.date] = (countByDate[r.date] || 0) + 1;
+  });
+
+  console.log('Chart days:', days.map(d => d.dateStr));
+  console.log('Count by date:', countByDate);
+
+  const maxCount = Math.max(...Object.values(countByDate), 1);
+
+  container.innerHTML = days.map(day => {
+    const count = countByDate[day.dateStr] || 0;
+    const heightPct = Math.round((count / maxCount) * 100);
+    const isToday = day.isToday;
     return `
       <div class="su-chart-col">
-        <div style="display:flex;flex:1;align-items:flex-end">
-          <div class="su-chart-bar" style="width:100%;height:${heightPct}%${isToday ? ';background:var(--accent)' : ''}">
-            <span class="su-chart-value">${c}</span>
-          </div>
+        <div class="su-chart-bar-wrap">
+          <div class="su-chart-count">${count > 0 ? count : ''}</div>
+          <div class="su-chart-bar ${isToday ? 'today' : ''}"
+               style="height:${heightPct}%"></div>
         </div>
-        <div class="su-chart-day">${label}</div>
+        <div class="su-chart-label ${isToday ? 'today' : ''}">${day.dayName}</div>
       </div>
     `;
   }).join('');
