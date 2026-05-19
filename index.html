@@ -1463,6 +1463,7 @@ svg{display:block}
   white-space:nowrap
 }
 .su-plan-trial{background:rgba(0,0,0,0.06);color:var(--ink-2)}
+.su-plan-starter{background:rgba(0,140,80,0.10);color:#067a48}
 .su-plan-groei{background:rgba(50,100,220,0.12);color:#2a4fb0}
 .su-plan-pro{background:rgba(130,70,200,0.12);color:#6d3aa6}
 .su-status-active{background:rgba(0,140,80,0.12);color:#067a48}
@@ -1991,6 +1992,10 @@ svg{display:block}
       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19.5c1-3 3.2-4.5 6-4.5s5 1.5 6 4.5"/><circle cx="17" cy="8" r="2.5"/><path d="M15.8 14c2 .1 3.4 1.1 4.2 2.5"/></svg>
       <span>Gebruikers</span>
     </button>
+    <button class="admin-tab" id="su-tab-financieel" type="button" onclick="switchSuperuserTab('financieel')">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="13" rx="2"/><path d="M2.5 10h19"/><path d="M6 15.5h3"/></svg>
+      <span>Financieel</span>
+    </button>
   </nav>
 
   <!-- TAB 1: OVERZICHT -->
@@ -2091,6 +2096,55 @@ svg{display:block}
           <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--ink-3)">Laden…</td></tr>
         </tbody>
       </table>
+    </section>
+  </div>
+
+  <!-- TAB 4: FINANCIEEL -->
+  <div class="admin-tab-content" id="su-content-financieel" style="display:none">
+    <section class="admin-summary">
+      <div class="admin-summary-grid">
+        <div class="summary-pill">
+          <div class="summary-pill-label">MRR</div>
+          <div class="summary-pill-value" id="su-fin-mrr">—</div>
+        </div>
+        <div class="summary-pill">
+          <div class="summary-pill-label">Verwachte jaaromzet</div>
+          <div class="summary-pill-value" id="su-fin-arr">—</div>
+        </div>
+        <div class="summary-pill">
+          <div class="summary-pill-label">Betalende klanten</div>
+          <div class="summary-pill-value" id="su-fin-paying">—</div>
+        </div>
+        <div class="summary-pill">
+          <div class="summary-pill-label">Trial accounts</div>
+          <div class="summary-pill-value" id="su-fin-trial">—</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Bedrijfsnaam</th>
+            <th>Plan</th>
+            <th>Status</th>
+            <th class="th-total">Maandbedrag</th>
+            <th>Trial verloopt</th>
+            <th>Stripe ID</th>
+            <th>Aangemaakt</th>
+          </tr>
+        </thead>
+        <tbody id="su-fin-tbody">
+          <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--ink-3)">Laden…</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section style="padding:0 24px 32px">
+      <div class="member-card" style="padding:20px 24px">
+        <div id="su-fin-summary" style="font-size:14px;line-height:1.7;color:var(--ink-2)">Laden…</div>
+      </div>
     </section>
   </div>
 
@@ -3383,10 +3437,13 @@ const SU = {
 };
 
 const PLAN_BADGE = {
-  trial: { label: 'Trial', cls: 'su-plan-trial' },
-  groei: { label: 'Groei', cls: 'su-plan-groei' },
-  pro:   { label: 'Pro',   cls: 'su-plan-pro'   },
+  trial:   { label: 'Trial',   cls: 'su-plan-trial'   },
+  starter: { label: 'Starter', cls: 'su-plan-starter' },
+  growth:  { label: 'Groei',   cls: 'su-plan-groei'   },
+  groei:   { label: 'Groei',   cls: 'su-plan-groei'   }, // legacy key
+  pro:     { label: 'Pro',     cls: 'su-plan-pro'     },
 };
+const PLAN_PRICE = { trial: 0, starter: 0, growth: 49, groei: 49, pro: 99 };
 const COMPANY_STATUS_BADGE = {
   active:  { label: 'Actief',     cls: 'su-status-active'  },
   paused:  { label: 'Gepauzeerd', cls: 'su-status-paused'  },
@@ -3401,7 +3458,7 @@ function showSuperuser() {
 }
 
 function switchSuperuserTab(name) {
-  ['overzicht','bedrijven','gebruikers'].forEach(t => {
+  ['overzicht','bedrijven','gebruikers','financieel'].forEach(t => {
     const tab = document.getElementById('su-tab-' + t);
     const content = document.getElementById('su-content-' + t);
     if (tab) tab.classList.toggle('active', t === name);
@@ -3446,6 +3503,100 @@ async function loadSuperuserData() {
   populateUserCompanyFilter();
   renderSuperuserCompanies();
   renderSuperuserUsers();
+  renderSuperuserFinancieel();
+}
+
+function formatEuro(amount) {
+  return '€ ' + Number(amount || 0).toLocaleString('nl-NL');
+}
+
+function formatTrialDate(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return '—';
+  const daysLeft = Math.ceil((d - new Date()) / 86400000);
+  const formatted = d.toLocaleDateString('nl-NL', {
+    day: 'numeric', month: 'short', year: 'numeric'
+  });
+  if (daysLeft < 0) {
+    return `<span style="color:var(--red,#ef4444);font-weight:600">${formatted} (verlopen)</span>`;
+  }
+  if (daysLeft <= 3) {
+    return `<span style="color:var(--amber,#f59e0b);font-weight:600">${formatted} (${daysLeft}d)</span>`;
+  }
+  return `${formatted} (${daysLeft}d)`;
+}
+
+function renderSuperuserFinancieel() {
+  const companies = SU.companies || [];
+
+  // Stat calculations
+  const mrr = companies
+    .filter(c => c.status === 'active')
+    .reduce((sum, c) => sum + (PLAN_PRICE[c.plan] || 0), 0);
+
+  const payingCount = companies.filter(c =>
+    ['growth','groei','pro'].includes(c.plan) && c.status === 'active'
+  ).length;
+
+  const trialCount = companies.filter(c =>
+    c.plan === 'trial' && c.status === 'active'
+  ).length;
+
+  const expiringCount = companies.filter(c => {
+    if (!c.trial_ends_at || c.plan !== 'trial') return false;
+    const daysLeft = (new Date(c.trial_ends_at) - new Date()) / 86400000;
+    return daysLeft >= 0 && daysLeft <= 7;
+  }).length;
+
+  document.getElementById('su-fin-mrr').textContent = formatEuro(mrr);
+  document.getElementById('su-fin-arr').textContent = formatEuro(mrr * 12);
+  document.getElementById('su-fin-paying').textContent = payingCount;
+  document.getElementById('su-fin-trial').textContent = trialCount;
+
+  // Sort: paying first, then trials, then everything else
+  const sortPriority = (c) => {
+    if (['growth','groei','pro'].includes(c.plan) && c.status === 'active') return 0;
+    if (c.plan === 'trial' && c.status === 'active') return 1;
+    return 2;
+  };
+  const rows = companies
+    .slice()
+    .sort((a, b) => sortPriority(a) - sortPriority(b) || (a.name || '').localeCompare(b.name || ''));
+
+  const tbody = document.getElementById('su-fin-tbody');
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--ink-3)">Geen bedrijven gevonden</td></tr>`;
+  } else {
+    tbody.innerHTML = rows.map(c => {
+      const plan = PLAN_BADGE[c.plan] || { label: c.plan || '—', cls: 'su-plan-trial' };
+      const status = COMPANY_STATUS_BADGE[c.status] || { label: c.status || '—', cls: 'su-status-paused' };
+      const price = PLAN_PRICE[c.plan] || 0;
+      const stripeId = c.stripe_customer_id
+        ? escapeHtml(c.stripe_customer_id.slice(0, 12)) + (c.stripe_customer_id.length > 12 ? '…' : '')
+        : '—';
+      const trialCell = (c.plan === 'trial') ? formatTrialDate(c.trial_ends_at) : '—';
+      return `
+        <tr>
+          <td class="name-cell">${escapeHtml(c.name || '—')}</td>
+          <td><span class="su-badge ${plan.cls}">${plan.label}</span></td>
+          <td><span class="su-badge ${status.cls}">${status.label}</span></td>
+          <td class="total-cell">${formatEuro(price)}</td>
+          <td>${trialCell}</td>
+          <td style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--ink-2)">${stripeId}</td>
+          <td>${escapeHtml(_fmtDate(c.created_at))}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // Trend summary
+  const accent = (n) => `<span style="color:var(--accent);font-weight:700">${n}</span>`;
+  document.getElementById('su-fin-summary').innerHTML = `
+    Op dit moment betalen ${accent(payingCount)} bedrijven in totaal ${accent(formatEuro(mrr))} per maand.<br/>
+    ${accent(trialCount)} bedrijven zitten nog in hun gratis proefperiode.<br/>
+    ${accent(expiringCount)} proefperiode${expiringCount === 1 ? '' : 's'} verlop${expiringCount === 1 ? 't' : 'en'} binnen 7 dagen.
+  `;
 }
 
 function renderSuperuserChart(regs) {
