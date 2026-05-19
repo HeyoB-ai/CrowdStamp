@@ -3377,27 +3377,37 @@ function switchSuperuserTab(name) {
 }
 
 async function loadSuperuserData() {
-  // Fetch everything in parallel, count client-side.
-  const today = isoDate(new Date());
-  const sevenDaysAgo = isoDate(new Date(Date.now() - 6 * 24 * 60 * 60 * 1000));
+  // Build the date window. NOTE: toISOString uses UTC — see commit comment for caveat.
+  const today = new Date();
+  const sevenDaysAgo = new Date(today);
+  sevenDaysAgo.setDate(today.getDate() - 6); // 6 days ago + today = 7 days
 
-  const [companies, users, regs7d] = await Promise.all([
+  const todayStr = today.toISOString().split('T')[0];
+  const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
+
+  console.log('Chart date range:', sevenDaysAgoStr, 'to', todayStr);
+
+  const [companies, users, regsData, todayRegs] = await Promise.all([
     supabaseGet('companies?order=created_at.desc').catch(e => { console.error('SU companies:', e); return []; }),
     supabaseGet('profiles?order=created_at.desc').catch(e => { console.error('SU profiles:', e); return []; }),
-    supabaseGet(`registrations?date=gte.${sevenDaysAgo}&select=id,date,company_id`).catch(e => { console.error('SU regs:', e); return []; }),
+    supabaseGet(`registrations?date=gte.${sevenDaysAgoStr}&date=lte.${todayStr}&select=date,id,company_id`).catch(e => { console.error('SU regs:', e); return []; }),
+    supabaseGet(`registrations?date=eq.${todayStr}&select=id`).catch(e => { console.error('SU today regs:', e); return []; }),
   ]);
+
+  console.log('Registrations data:', regsData);
 
   SU.companies = Array.isArray(companies) ? companies : [];
   SU.users = Array.isArray(users) ? users : [];
-  SU.registrations = Array.isArray(regs7d) ? regs7d : [];
+  SU.registrations = Array.isArray(regsData) ? regsData : [];
+
+  const checkInsToday = Array.isArray(todayRegs) ? todayRegs.length : 0;
 
   // Stat cards
   document.getElementById('su-stat-companies').textContent = SU.companies.length;
   document.getElementById('su-stat-companies-active').textContent =
     SU.companies.filter(c => c.status === 'active').length;
   document.getElementById('su-stat-users').textContent = SU.users.length;
-  document.getElementById('su-stat-today').textContent =
-    SU.registrations.filter(r => r.date === today).length;
+  document.getElementById('su-stat-today').textContent = checkInsToday;
 
   renderSuperuserChart();
   populateUserCompanyFilter();
