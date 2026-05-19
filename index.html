@@ -2480,6 +2480,12 @@ async function doLogin() {
   lbl.textContent = 'Inloggen';
   btn.disabled = false;
   document.getElementById('auth-password').value = '';
+
+  // Set cachedSession IMMEDIATELY from the login result so REST helpers can use it
+  // without waiting for onAuthStateChange to fire.
+  if (data.session) {
+    cachedSession = data.session;
+  }
   await loadProfileAndRoute(data.user);
 }
 
