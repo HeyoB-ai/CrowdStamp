@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="theme-color" content="#ffffff"/>
+<title>Privacybeleid — CrowdStamp</title>
+<meta name="description" content="Het privacybeleid van CrowdStamp. Lees hoe wij omgaan met je persoonsgegevens, conform de AVG/GDPR."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --ink: #0f0f0f;
+  --ink-2: #3a3a3a;
+  --ink-3: #6b6b6b;
+  --ink-4: #aaa;
+  --accent: #e8410a;
+  --accent-soft: rgba(232,65,10,0.08);
+  --bg: oklch(0.96 0.005 90);
+  --bg-2: oklch(0.93 0.005 90);
+  --line: rgba(0,0,0,0.09);
+  --line-2: rgba(0,0,0,0.14);
+  --white: #ffffff;
+}
+
+html{scroll-behavior:smooth}
+html,body{
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+
+img,svg{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+
+.container{
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ── Nav ── */
+.nav{
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(250,249,246,0.85);
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid var(--line);
+}
+.nav-inner{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+.wordmark{display:flex;align-items:center;gap:8px}
+.wordmark-text{
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 700;
+  font-size: 19px;
+  letter-spacing: -0.035em;
+}
+.nav-back{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  color: var(--ink-3);
+  transition: color 0.15s;
+}
+.nav-back:hover{color:var(--ink)}
+
+/* ── Page header ── */
+.page-head{
+  padding: 56px 0 24px;
+}
+.page-head h1{
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 700;
+  font-size: clamp(30px, 5vw, 44px);
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  margin-bottom: 10px;
+  color: var(--ink);
+}
+.page-head .updated{
+  font-size: 14px;
+  color: var(--ink-3);
+  letter-spacing: -0.005em;
+}
+
+/* ── Policy body ── */
+.policy{
+  padding: 8px 0 56px;
+}
+.policy section{
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 24px 26px;
+  margin-bottom: 16px;
+}
+.policy h2{
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: -0.025em;
+  margin-bottom: 12px;
+  color: var(--ink);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.policy h2 .mark{
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.policy p{
+  font-size: 15px;
+  color: var(--ink-2);
+  letter-spacing: -0.008em;
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+.policy p:last-child{margin-bottom:0}
+.policy ul{
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 4px 0 2px;
+}
+.policy li{
+  position: relative;
+  padding-left: 22px;
+  font-size: 15px;
+  color: var(--ink-2);
+  letter-spacing: -0.008em;
+  line-height: 1.55;
+}
+.policy li::before{
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 9px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.policy a{
+  color: var(--accent);
+  font-weight: 500;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(232,65,10,0.3);
+  transition: border-color 0.15s;
+}
+.policy a:hover{border-color:var(--accent)}
+.policy strong{font-weight:600;color:var(--ink)}
+
+/* ── Footer ── */
+footer{
+  padding: 32px 0 60px;
+  font-size: 13px;
+  color: var(--ink-3);
+  border-top: 1px solid var(--line);
+}
+.footer-inner{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.footer-left{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.footer-copy{letter-spacing:-0.005em}
+.footer-links{display:flex;gap:18px;flex-wrap:wrap}
+.footer-links a{
+  color: var(--ink-3);
+  letter-spacing: -0.005em;
+  transition: color 0.15s;
+}
+.footer-links a:hover{color:var(--ink)}
+
+@media (max-width: 480px){
+  .page-head{padding:40px 0 20px}
+  .policy section{padding:20px 18px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="wordmark" aria-label="CrowdStamp home">
+      <svg viewBox="0 0 24 24" width="24" height="24">
+        <rect x="2" y="2" width="20" height="20" rx="5.5" fill="#0f0f0f"/>
+        <rect x="7.5" y="7.5" width="9" height="9" rx="2.2" fill="white"/>
+        <circle cx="12" cy="12" r="1.6" fill="#0f0f0f"/>
+      </svg>
+      <span class="wordmark-text">crowdstamp</span>
+    </a>
+    <a href="/" class="nav-back" aria-label="Terug naar home">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      Terug naar home
+    </a>
+  </div>
+</nav>
+
+<!-- PAGE HEADER -->
+<header class="page-head">
+  <div class="container">
+    <h1>Privacybeleid</h1>
+    <p class="updated">Laatste update: 19 mei 2026</p>
+  </div>
+</header>
+
+<!-- POLICY -->
+<main class="policy">
+  <div class="container">
+
+    <section>
+      <h2><span class="mark">A</span>Wie zijn wij</h2>
+      <p>CrowdStamp is een product van <strong>[jouw bedrijfsnaam]</strong>.</p>
+      <p>Contactgegevens: <a href="mailto:info@crowdstamp.nl">info@crowdstamp.nl</a></p>
+    </section>
+
+    <section>
+      <h2><span class="mark">B</span>Welke gegevens verzamelen wij</h2>
+      <ul>
+        <li>Naam en e-mailadres (bij aanmaken account)</li>
+        <li>Bedrijfsnaam</li>
+        <li>GPS-locatiegegevens (bij check-in en check-out)</li>
+        <li>Tijdstippen van check-in en check-out</li>
+        <li>Foto's van werkzaamheden (optioneel, door gebruiker geüpload)</li>
+        <li>Opmerkingen en notities</li>
+        <li>IP-adres en browsergegevens (via Netlify en Supabase)</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2><span class="mark">C</span>Waarom verzamelen wij deze gegevens</h2>
+      <ul>
+        <li>Aanwezigheidsregistratie van medewerkers en onderaannemers</li>
+        <li>Verificatie van gewerkte uren</li>
+        <li>Voortgangsdocumentatie van werkzaamheden</li>
+        <li>Facturatie en administratie</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2><span class="mark">D</span>Grondslagen (AVG artikel 6)</h2>
+      <ul>
+        <li>Uitvoering van een overeenkomst (arbeidsregistratie)</li>
+        <li>Gerechtvaardigd belang (verificatie uren en aanwezigheid)</li>
+        <li>Toestemming (voor optionele foto's)</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2><span class="mark">E</span>Hoe lang bewaren wij gegevens</h2>
+      <ul>
+        <li>Registratiegegevens: 7 jaar (fiscale bewaarplicht)</li>
+        <li>Foto's: 2 jaar</li>
+        <li>Accountgegevens: tot 30 dagen na opzegging</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2><span class="mark">F</span>Delen met derden</h2>
+      <p>Wij delen gegevens met:</p>
+      <ul>
+        <li><strong>Supabase</strong> — database hosting, EU-servers</li>
+        <li><strong>Netlify</strong> — website hosting, VS (SCC's van toepassing)</li>
+        <li><strong>Stripe</strong> — betalingsverwerking</li>
+        <li><strong>Brevo</strong> — e-mailservice</li>
+      </ul>
+      <p>Wij verkopen nooit persoonsgegevens aan derden.</p>
+    </section>
+
+    <section>
+      <h2><span class="mark">G</span>Rechten van betrokkenen</h2>
+      <p>U heeft recht op:</p>
+      <ul>
+        <li>Inzage in uw gegevens</li>
+        <li>Correctie van onjuiste gegevens</li>
+        <li>Verwijdering van uw gegevens</li>
+        <li>Bezwaar tegen verwerking</li>
+        <li>Gegevensoverdraagbaarheid</li>
+      </ul>
+      <p>Stuur een verzoek naar: <a href="mailto:privacy@crowdstamp.nl">privacy@crowdstamp.nl</a></p>
+    </section>
+
+    <section>
+      <h2><span class="mark">H</span>Beveiliging</h2>
+      <p>Gegevens worden versleuteld opgeslagen en verstuurd (HTTPS/TLS).</p>
+      <p>Toegang is beperkt op basis van rollen en rechten.</p>
+    </section>
+
+    <section>
+      <h2><span class="mark">I</span>Cookies</h2>
+      <p>CrowdStamp gebruikt geen tracking cookies.</p>
+      <p>Alleen functionele cookies voor inloggen (sessie).</p>
+    </section>
+
+    <section>
+      <h2><span class="mark">J</span>Wijzigingen</h2>
+      <p>Dit beleid kan worden aangepast. De laatste versie staat altijd op deze pagina.</p>
+    </section>
+
+    <section>
+      <h2><span class="mark">K</span>Contact en klachten</h2>
+      <p><a href="mailto:info@crowdstamp.nl">info@crowdstamp.nl</a></p>
+      <p>U kunt ook een klacht indienen bij de Autoriteit Persoonsgegevens: <a href="https://autoriteitpersoonsgegevens.nl" target="_blank" rel="noopener">autoriteitpersoonsgegevens.nl</a></p>
+    </section>
+
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container footer-inner">
+    <div class="footer-left">
+      <svg viewBox="0 0 24 24" width="20" height="20">
+        <rect x="2" y="2" width="20" height="20" rx="5.5" fill="#0f0f0f"/>
+        <rect x="7.5" y="7.5" width="9" height="9" rx="2.2" fill="white"/>
+        <circle cx="12" cy="12" r="1.6" fill="#0f0f0f"/>
+      </svg>
+      <span class="footer-copy">© 2026 CrowdStamp</span>
+    </div>
+    <div class="footer-links">
+      <a href="/">Home</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
