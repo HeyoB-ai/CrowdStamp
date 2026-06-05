@@ -1570,7 +1570,7 @@ svg{display:block}
           <span id="status-label">Niet ingecheckt</span>
         </div>
         <span class="role-pill" id="role-pill" style="display:none">Admin</span>
-        <button class="logout-btn" id="worker-back-btn" type="button" onclick="backToSuperuser()" title="Terug naar overzicht" style="display:none">
+        <button class="logout-btn" id="worker-back-btn" type="button" onclick="backFromCheckin()" title="Terug naar overzicht" style="display:none">
           <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
         <button class="logout-btn" onclick="doLogout()" title="Uitloggen">
@@ -1817,6 +1817,15 @@ svg{display:block}
 
   <div class="admin-tab-content" id="tab-overzicht">
 
+  <section style="padding:22px 24px 0">
+    <button class="submit-btn" type="button" onclick="openWorkerCheckin('admin')" style="background:var(--accent)">
+      <span class="submit-btn-label">Check-in / uitcheck invoeren</span>
+      <div class="submit-circle" style="background:rgba(255,255,255,0.2)">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/><path d="M14 8l4 4-4 4M18 12H10"/></svg>
+      </div>
+    </button>
+  </section>
+
   <section class="admin-summary">
     <div class="admin-summary-grid">
       <div class="summary-pill">
@@ -2004,7 +2013,7 @@ svg{display:block}
   <!-- TAB 1: OVERZICHT -->
   <div class="admin-tab-content" id="su-content-overzicht">
     <section style="padding:24px 24px 0">
-      <button class="submit-btn" type="button" onclick="openWorkerCheckin()" style="background:var(--accent)">
+      <button class="submit-btn" type="button" onclick="openWorkerCheckin('superuser')" style="background:var(--accent)">
         <span class="submit-btn-label">Check-in / uitcheck invoeren</span>
         <div class="submit-circle" style="background:rgba(255,255,255,0.2)">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/><path d="M14 8l4 4-4 4M18 12H10"/></svg>
@@ -2441,9 +2450,9 @@ function showWorker() {
   document.getElementById('status-pill').style.display = 'flex';
   document.getElementById('role-pill').style.display = 'none';
 
-  // Toon de "terug naar overzicht"-knop alleen wanneer een superuser dit scherm opende.
+  // Toon de "terug naar overzicht"-knop alleen wanneer een admin/superuser dit scherm opende.
   const backBtn = document.getElementById('worker-back-btn');
-  if (backBtn) backBtn.style.display = S.returnToSuperuser ? 'flex' : 'none';
+  if (backBtn) backBtn.style.display = S.checkinReturnTo ? 'flex' : 'none';
 
   if (S.profile.full_name) {
     document.getElementById('naam').value = S.profile.full_name;
@@ -2457,16 +2466,19 @@ function showWorker() {
   loadTodayRegistration();
 }
 
-// Superuser opent het worker check-in/uitcheck scherm vanuit het overzicht.
-function openWorkerCheckin() {
-  S.returnToSuperuser = true;
+// Admin/superuser opent het worker check-in/uitcheck scherm vanuit het overzicht.
+// returnTo bepaalt naar welk dashboard de terug-knop terugkeert ('admin' of 'superuser').
+function openWorkerCheckin(returnTo) {
+  S.checkinReturnTo = returnTo || 'superuser';
   showWorker();
 }
 
-// Terug van het worker check-in scherm naar het superuser-overzicht.
-function backToSuperuser() {
-  S.returnToSuperuser = false;
-  showSuperuser();
+// Terug van het worker check-in scherm naar het juiste dashboard.
+function backFromCheckin() {
+  const dest = S.checkinReturnTo;
+  S.checkinReturnTo = null;
+  if (dest === 'admin') showAdmin();
+  else showSuperuser();
 }
 
 // Parse a "HH:MM" string into a Date set to today at that time.
