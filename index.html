@@ -1774,7 +1774,7 @@ svg{display:block}
     <div class="card no-pad">
       <div class="summary-row"><span class="sum-key">Naam</span><span class="sum-val" id="me-name">—</span></div>
       <div class="summary-row"><span class="sum-key">E-mail</span><span class="sum-val" id="me-email">—</span></div>
-      <div class="summary-row"><span class="sum-key">Rol</span><span class="sum-val" id="me-role">—</span></div>
+      <div class="summary-row"><span class="sum-key">Functie</span><span class="sum-val" id="me-role">—</span></div>
     </div>
     <button class="submit-btn" onclick="doLogout()" style="background:var(--accent)">
       <span class="submit-btn-label">Uitloggen</span>
@@ -2585,7 +2585,7 @@ function showWorker() {
   }
   document.getElementById('me-name').textContent = S.profile.full_name || '—';
   document.getElementById('me-email').textContent = S.email || '—';
-  document.getElementById('me-role').textContent = S.profile.role;
+  document.getElementById('me-role').textContent = FUNCTIE_LABELS[S.profile.functie] || S.profile.functie || 'Medewerker';
 
   updateOverview();
   loadLogbookToday();
