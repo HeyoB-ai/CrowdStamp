@@ -1649,6 +1649,13 @@ svg{display:block}
           <div class="field-label">Projectnaam / locatie</div>
           <input class="field-input" id="werk" type="text" placeholder="Locatie invullen"/>
         </div>
+        <!-- Model B: alleen zichtbaar als dit bedrijf door opdrachtgevers is ingeschakeld -->
+        <div class="field" id="opdrachtgever-field" style="display:none">
+          <div class="field-label">Opdrachtgever</div>
+          <select class="field-input" id="opdrachtgever">
+            <option value="">Eigen bedrijf</option>
+          </select>
+        </div>
       </div>
     </div>
 
@@ -1989,6 +1996,49 @@ svg{display:block}
       </div>
     </section>
 
+    <!-- Model B: onderaannemer-bedrijf inschakelen -->
+    <section class="member-section">
+      <div class="member-card">
+        <h2 class="member-card-title">Onderaannemer inschakelen</h2>
+        <p class="member-card-sub">Schakel een onderaannemer-bedrijf in dat voor jou werkt. Bestaat het account nog niet, dan ontvangen ze een uitnodiging.</p>
+
+        <div id="engage-upgrade" style="display:none;margin-bottom:14px;padding:12px 14px;border-radius:10px;background:rgba(232,65,10,0.08);color:var(--accent);font-size:13px;font-weight:500;line-height:1.5">
+          Upgrade je abonnement om onderaannemers in te schakelen.
+          <a href="#" onclick="event.preventDefault();openPortal()" style="color:var(--accent);text-decoration:underline">Beheer abonnement</a>
+        </div>
+
+        <form id="engage-form" onsubmit="event.preventDefault();engageContractor()">
+          <div class="invite-grid">
+            <div class="invite-field">
+              <label class="invite-label">Bedrijfsnaam onderaannemer</label>
+              <input id="engage-companyname" type="text" placeholder="Bedrijfsnaam" required minlength="2"/>
+            </div>
+            <div class="invite-field">
+              <label class="invite-label">E-mailadres</label>
+              <input id="engage-email" type="email" placeholder="naam@bedrijf.nl" autocomplete="email" required/>
+            </div>
+          </div>
+          <button class="invite-submit" id="engage-submit" type="submit">
+            <span id="engage-submit-label">Inschakelen</span>
+          </button>
+          <div class="invite-error" id="engage-error"></div>
+          <div class="invite-success" id="engage-success"></div>
+        </form>
+      </div>
+    </section>
+
+    <section class="member-section">
+      <div class="member-card">
+        <div class="member-card-head">
+          <h2 class="member-card-title" style="margin-bottom:0">Ingeschakelde onderaannemers</h2>
+          <span class="member-card-count" id="contractor-count"></span>
+        </div>
+        <div id="contractor-list">
+          <div class="member-list-loading">Laden…</div>
+        </div>
+      </div>
+    </section>
+
     <section class="member-section">
       <div class="member-card">
         <div class="member-card-head">
@@ -2269,6 +2319,8 @@ const S = {
   currentRows: [],     // admin: rows currently shown
   registrationId: null, // today's registration row id (for restore + update)
   passwordSetDone: false, // true zodra een uitgenodigde gebruiker zijn wachtwoord heeft gezet
+  contractors: [],     // Model B: ingeschakelde onderaannemers (admin-view)
+  todayClientCompanyId: '', // Model B: gekozen opdrachtgever bij de registratie van vandaag
 };
 
 // ════════════════════════════════════════════════════════
@@ -2537,6 +2589,7 @@ function showWorker() {
 
   updateOverview();
   loadLogbookToday();
+  loadOpdrachtgevers();
   loadTodayRegistration();
 }
 
@@ -2587,6 +2640,9 @@ async function loadTodayRegistration() {
     if (reg.notes) {
       document.getElementById('commentaar').value = reg.notes;
     }
+    // Model B: herstel gekozen opdrachtgever (optie kan nog laden -> applyOpdrachtgeverRestore handelt beide volgordes af)
+    S.todayClientCompanyId = reg.client_company_id || '';
+    applyOpdrachtgeverRestore();
 
     if (reg.check_in_time) {
       S.inTime = parseTimeForToday(reg.check_in_time) || new Date();
@@ -2892,6 +2948,7 @@ async function handlePunch(type) {
       const inData = {
         user_id: S.profile.id,
         company_id: S.profile.company_id,
+        client_company_id: getSelectedClientCompany(),
         full_name: S.profile.full_name || cachedSession.user.email,
         project_name: werk || null,
         check_in_time: fmt(now),
@@ -3081,6 +3138,7 @@ async function doSubmit() {
       await supabasePatch('registrations', registrationId, {
         full_name: naam,
         project_name: werk || null,
+        client_company_id: getSelectedClientCompany(),
         notes: notes,
         total_hours: totaal,
       });
@@ -3089,6 +3147,7 @@ async function doSubmit() {
       const rows = await supabasePost('registrations', {
         user_id: S.profile.id,
         company_id: S.profile.company_id,
+        client_company_id: getSelectedClientCompany(),
         full_name: naam,
         project_name: werk || null,
         check_in_time: fmt(S.inTime),
@@ -3336,8 +3395,10 @@ async function loadWeekDashboard() {
 
   let data = null, error = null;
   try {
+    // Model A: eigen company_id. Model B: ook registraties die voor mij (client_company_id) zijn gedraaid.
+    const cid = S.profile.company_id;
     data = await supabaseGet(
-      `registrations?company_id=eq.${S.profile.company_id}&date=gte.${startStr}&date=lte.${endStr}&order=full_name.asc,date.asc`
+      `registrations?or=(company_id.eq.${cid},client_company_id.eq.${cid})&date=gte.${startStr}&date=lte.${endStr}&order=full_name.asc,date.asc`
     );
   } catch (e) {
     error = e;
@@ -3554,7 +3615,7 @@ function switchAdminTab(name) {
     if (tab) tab.classList.toggle('active', t === name);
     if (content) content.style.display = (t === name) ? '' : 'none';
   });
-  if (name === 'medewerkers') loadMembers();
+  if (name === 'medewerkers') { loadMembers(); loadContractors(); }
 }
 
 // ════════════════════════════════════════════════════════
@@ -4120,6 +4181,183 @@ async function inviteMember() {
     submitBtn.disabled = false;
     submitLabel.textContent = 'Uitnodiging versturen';
   }
+}
+
+// ════════════════════════════════════════════════════════
+// Model B — onderaannemers (opdrachtgever-kant)
+// ════════════════════════════════════════════════════════
+// Geeft de gekozen opdrachtgever-company terug (of null = eigen bedrijf / Model A).
+function getSelectedClientCompany() {
+  const sel = document.getElementById('opdrachtgever');
+  const v = sel && sel.value ? sel.value : '';
+  return v || null;
+}
+
+// Vul de opdrachtgever-dropdown in het check-in scherm: companies die mijn company hebben ingeschakeld.
+async function loadOpdrachtgevers() {
+  const field = document.getElementById('opdrachtgever-field');
+  const select = document.getElementById('opdrachtgever');
+  if (!field || !select || !S.profile) return;
+
+  let data = null;
+  try {
+    data = await supabaseGet(
+      `company_relationships?contractor_company_id=eq.${S.profile.company_id}&status=eq.active&select=client:client_company_id(id,name)`
+    );
+  } catch (e) {
+    console.error('loadOpdrachtgevers:', e);
+  }
+
+  const clients = (Array.isArray(data) ? data : []).map(r => r.client).filter(Boolean);
+  if (clients.length === 0) {
+    // Geen opdrachtgevers (gewoon Model A-bedrijf) -> verborgen houden.
+    field.style.display = 'none';
+    return;
+  }
+  select.innerHTML = '<option value="">Eigen bedrijf</option>' +
+    clients.map(c => `<option value="${escapeAttr(c.id)}">${escapeHtml(c.name)}</option>`).join('');
+  field.style.display = '';
+  applyOpdrachtgeverRestore();
+}
+
+// Herstelt de eerder gekozen opdrachtgever zodra zowel de opties als de registratie geladen zijn.
+function applyOpdrachtgeverRestore() {
+  const select = document.getElementById('opdrachtgever');
+  if (!select) return;
+  const want = S.todayClientCompanyId;
+  if (!want) return;
+  const hasOption = Array.from(select.options).some(o => o.value === want);
+  if (hasOption) select.value = want;
+}
+
+async function engageContractor() {
+  const companyName = document.getElementById('engage-companyname').value.trim();
+  const email = document.getElementById('engage-email').value.trim();
+  const errorEl = document.getElementById('engage-error');
+  const successEl = document.getElementById('engage-success');
+  const upgradeEl = document.getElementById('engage-upgrade');
+  const submitBtn = document.getElementById('engage-submit');
+  const submitLabel = document.getElementById('engage-submit-label');
+
+  errorEl.classList.remove('show');
+  successEl.classList.remove('show');
+  upgradeEl.style.display = 'none';
+
+  if (!companyName || !email) {
+    errorEl.textContent = 'Vul bedrijfsnaam en e-mailadres in';
+    errorEl.classList.add('show');
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errorEl.textContent = 'Voer een geldig e-mailadres in';
+    errorEl.classList.add('show');
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitLabel.innerHTML = '<div class="spinner"></div>';
+
+  if (!cachedSession) {
+    errorEl.textContent = 'Niet ingelogd';
+    errorEl.classList.add('show');
+    submitBtn.disabled = false;
+    submitLabel.textContent = 'Inschakelen';
+    return;
+  }
+
+  try {
+    const r = await fetch('/.netlify/functions/engage-contractor', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${cachedSession.access_token}`,
+      },
+      body: JSON.stringify({ companyName, email }),
+    });
+    const j = await r.json().catch(() => ({}));
+
+    if (j.code === 'UPGRADE_REQUIRED') {
+      upgradeEl.style.display = 'block';
+      submitBtn.disabled = false;
+      submitLabel.textContent = 'Inschakelen';
+      return;
+    }
+    if (!r.ok || !j.success) {
+      errorEl.textContent = j.error || ('Er ging iets mis (HTTP ' + r.status + ')');
+      errorEl.classList.add('show');
+      submitBtn.disabled = false;
+      submitLabel.textContent = 'Inschakelen';
+      return;
+    }
+
+    successEl.textContent = j.message || 'Onderaannemer ingeschakeld';
+    successEl.classList.add('show');
+    document.getElementById('engage-companyname').value = '';
+    document.getElementById('engage-email').value = '';
+    submitBtn.disabled = false;
+    submitLabel.textContent = 'Inschakelen';
+
+    loadContractors();
+  } catch (e) {
+    errorEl.textContent = 'Netwerkfout: ' + e.message;
+    errorEl.classList.add('show');
+    submitBtn.disabled = false;
+    submitLabel.textContent = 'Inschakelen';
+  }
+}
+
+async function loadContractors() {
+  const list = document.getElementById('contractor-list');
+  if (!list) return;
+  list.innerHTML = '<div class="member-list-loading">Laden…</div>';
+
+  let data = null, error = null;
+  try {
+    data = await supabaseGet(
+      `company_relationships?client_company_id=eq.${S.profile.company_id}&select=id,status,created_at,contractor:contractor_company_id(id,name)&order=created_at.asc`
+    );
+  } catch (e) {
+    error = e;
+  }
+
+  if (error) {
+    list.innerHTML = `<div class="member-list-empty">Fout: ${escapeHtml(error.message)}</div>`;
+    return;
+  }
+  S.contractors = Array.isArray(data) ? data : [];
+  const countEl = document.getElementById('contractor-count');
+  if (countEl) countEl.textContent = `${S.contractors.length} ${S.contractors.length === 1 ? 'bedrijf' : 'bedrijven'}`;
+  renderContractors();
+}
+
+function renderContractors() {
+  const list = document.getElementById('contractor-list');
+  if (!list) return;
+  const items = S.contractors || [];
+
+  if (items.length === 0) {
+    list.innerHTML = '<div class="member-list-empty">Nog geen onderaannemers ingeschakeld</div>';
+    return;
+  }
+
+  list.innerHTML = items.map(rel => {
+    const name = rel.contractor?.name || '—';
+    const created = rel.created_at
+      ? new Date(rel.created_at).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })
+      : '—';
+    const statusLabel = rel.status === 'active' ? 'Actief' : (rel.status || '—');
+    const statusClass = rel.status === 'active' ? 'badge-status-active' : 'badge-status-inactive';
+    return `
+      <div class="member-row">
+        <div class="member-info">
+          <div class="member-name">${escapeHtml(name)}</div>
+          <div class="member-email">Ingeschakeld op ${escapeHtml(created)}</div>
+        </div>
+        <div class="member-badges">
+          <span class="member-badge ${statusClass}">${escapeHtml(statusLabel)}</span>
+        </div>
+      </div>`;
+  }).join('');
 }
 
 // ════════════════════════════════════════════════════════
