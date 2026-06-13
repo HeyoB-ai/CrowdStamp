@@ -54,7 +54,7 @@ exports.handler = async (event) => {
   try {
     const session = await stripe.billingPortal.sessions.create({
       customer: company.stripe_customer_id,
-      return_url: 'https://crowdstamp.netlify.app/app',
+      return_url: 'https://crowdstamp.netlify.app/index.html',
     });
     return { statusCode: 200, headers: CORS, body: JSON.stringify({ url: session.url }) };
   } catch (err) {

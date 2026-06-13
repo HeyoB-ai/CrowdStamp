@@ -1841,7 +1841,7 @@ svg{display:block}
       </div>
 
       <div class="admin-header-actions">
-        <button type="button" id="portal-btn" onclick="openPortal()" class="admin-text-btn">Abonnement beheren</button>
+        <button type="button" id="portal-btn" onclick="billingAction()" class="admin-text-btn">Abonnement beheren</button>
         <button class="csv-btn" id="csv-btn" onclick="exportCSV()" disabled>Exporteer naar CSV</button>
         <button class="logout-btn" type="button" onclick="doLogout()" title="Uitloggen">
           <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 7V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2"/><path d="M18 15l4-4-4-4M22 11H10"/></svg>
@@ -2005,7 +2005,7 @@ svg{display:block}
 
         <div id="engage-upgrade" style="display:none;margin-bottom:14px;padding:12px 14px;border-radius:10px;background:rgba(232,65,10,0.08);color:var(--accent);font-size:13px;font-weight:500;line-height:1.5">
           Upgrade je abonnement om onderaannemers in te schakelen.
-          <a href="#" onclick="event.preventDefault();openPortal()" style="color:var(--accent);text-decoration:underline">Beheer abonnement</a>
+          <a href="#" onclick="event.preventDefault();openUpgrade()" style="color:var(--accent);text-decoration:underline">Bekijk abonnementen</a>
         </div>
 
         <form id="engage-form" onsubmit="event.preventDefault();engageContractor()">
@@ -2261,6 +2261,40 @@ svg{display:block}
     </section>
   </div>
 
+</div>
+
+<!-- Upgrade / abonnement-keuze -->
+<div id="upgrade-overlay" style="display:none;position:fixed;inset:0;z-index:250;background:rgba(15,15,15,0.45);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)closeUpgrade()">
+  <div style="width:100%;max-width:420px;background:var(--white);border-radius:18px;padding:24px 22px;box-shadow:0 24px 60px rgba(0,0,0,0.22)">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:6px">
+      <h2 style="font-family:'Inter Tight',sans-serif;font-size:19px;font-weight:700;letter-spacing:-0.02em">Kies je abonnement</h2>
+      <button type="button" onclick="closeUpgrade()" aria-label="Sluiten" style="border:none;background:none;color:var(--ink-3);cursor:pointer;font-size:22px;line-height:1;padding:0 2px">×</button>
+    </div>
+    <p style="color:var(--ink-3);font-size:13px;line-height:1.5;margin-bottom:18px">14 dagen gratis proberen. Daarna maandelijks opzegbaar.</p>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="border:1px solid var(--line-2);border-radius:14px;padding:16px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px">
+          <span style="font-family:'Inter Tight',sans-serif;font-size:16px;font-weight:700">Groei</span>
+          <span style="font-size:15px;font-weight:600">€49<span style="color:var(--ink-3);font-size:12px;font-weight:500">/maand</span></span>
+        </div>
+        <p style="color:var(--ink-3);font-size:12.5px;line-height:1.5;margin-bottom:12px">Voor groeiende teams — inclusief onderaannemers inschakelen.</p>
+        <button type="button" id="upgrade-growth-btn" onclick="startCheckout('growth')" class="submit-btn" style="background:var(--accent);width:100%;justify-content:center">
+          <span class="submit-btn-label">Kies Groei</span>
+        </button>
+      </div>
+      <div style="border:1px solid var(--line-2);border-radius:14px;padding:16px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px">
+          <span style="font-family:'Inter Tight',sans-serif;font-size:16px;font-weight:700">Pro</span>
+          <span style="font-size:15px;font-weight:600">€99<span style="color:var(--ink-3);font-size:12px;font-weight:500">/maand</span></span>
+        </div>
+        <p style="color:var(--ink-3);font-size:12.5px;line-height:1.5;margin-bottom:12px">Alles uit Groei, voor grotere organisaties.</p>
+        <button type="button" id="upgrade-pro-btn" onclick="startCheckout('pro')" class="submit-btn" style="background:var(--ink);width:100%;justify-content:center">
+          <span class="submit-btn-label">Kies Pro</span>
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -2717,6 +2751,7 @@ function showAdmin() {
   document.getElementById('admin-shell').style.display = 'block';
   document.getElementById('admin-company').textContent = S.company?.name || '';
   document.getElementById('admin-role-pill').textContent = S.profile.role === 'superuser' ? 'Superuser' : 'Admin';
+  updateBillingButton();
   S.adminDate = new Date();
   document.getElementById('filter-date').value = isoDate(S.adminDate);
   switchAdminTab('overzicht');
@@ -4359,6 +4394,68 @@ function renderContractors() {
         </div>
       </div>`;
   }).join('');
+}
+
+// ════════════════════════════════════════════════════════
+// Stripe Checkout (nieuw / upgrade abonnement)
+// ════════════════════════════════════════════════════════
+function openUpgrade() {
+  document.getElementById('upgrade-overlay').style.display = 'flex';
+}
+function closeUpgrade() {
+  document.getElementById('upgrade-overlay').style.display = 'none';
+}
+
+// Heeft het bedrijf een lopend betaald abonnement?
+function hasPaidSubscription() {
+  const c = S.company;
+  return !!(c && c.stripe_customer_id && ['growth', 'groei', 'pro'].includes(c.plan));
+}
+
+// Zet de facturatieknop op "beheren" (betaald abonnement) of "afsluiten" (nog niet).
+function updateBillingButton() {
+  const btn = document.getElementById('portal-btn');
+  if (!btn) return;
+  btn.textContent = hasPaidSubscription() ? 'Abonnement beheren' : 'Abonnement afsluiten';
+  btn.disabled = false;
+}
+
+// Wat de facturatieknop doet, afhankelijk van de abonnementsstatus.
+function billingAction() {
+  if (hasPaidSubscription()) openPortal();
+  else openUpgrade();
+}
+
+async function startCheckout(plan) {
+  if (!cachedSession) { toast('Niet ingelogd'); return; }
+  const btn = document.getElementById(plan === 'pro' ? 'upgrade-pro-btn' : 'upgrade-growth-btn');
+  const label = btn?.querySelector('.submit-btn-label');
+  const prev = label?.textContent;
+  if (btn) btn.disabled = true;
+  if (label) label.textContent = 'Bezig…';
+
+  try {
+    const r = await fetch('/.netlify/functions/create-checkout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${cachedSession.access_token}`,
+      },
+      body: JSON.stringify({ plan }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.url) {
+      toast(j.error || ('Afrekenen mislukt (HTTP ' + r.status + ')'));
+      if (btn) btn.disabled = false;
+      if (label) label.textContent = prev;
+      return;
+    }
+    window.location.href = j.url;
+  } catch (e) {
+    toast('Netwerkfout: ' + e.message);
+    if (btn) btn.disabled = false;
+    if (label) label.textContent = prev;
+  }
 }
 
 // ════════════════════════════════════════════════════════
