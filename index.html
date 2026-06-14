@@ -1529,6 +1529,7 @@ svg{display:block}
         <span id="auth-btn-label">Inloggen</span>
       </button>
     </form>
+    <a href="/privacybeleid.html" style="display:block;text-align:center;margin-top:16px;color:var(--ink-3);font-size:12px;font-weight:500;text-decoration:none;letter-spacing:-0.005em">Privacy- en cookiebeleid</a>
   </div>
 </div>
 
@@ -1783,6 +1784,10 @@ svg{display:block}
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 7V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2"/><path d="M18 15l4-4-4-4M22 11H10"/></svg>
       </div>
     </button>
+    <div style="display:flex;justify-content:center;gap:18px;flex-wrap:wrap;margin-top:6px">
+      <a href="/privacybeleid.html" style="color:var(--ink-3);font-size:12px;font-weight:500;text-decoration:none;letter-spacing:-0.005em">Privacy- en cookiebeleid</a>
+      <a href="#" onclick="event.preventDefault();openCookiePrefs()" style="color:var(--ink-3);font-size:12px;font-weight:500;text-decoration:none;letter-spacing:-0.005em">Cookievoorkeuren</a>
+    </div>
   </div>
 
   <!-- TAB BAR -->
@@ -2297,6 +2302,37 @@ svg{display:block}
   </div>
 </div>
 
+<!-- Cookie-consent-banner (AVG) -->
+<div id="cookie-banner" style="display:none;position:fixed;left:0;right:0;bottom:0;z-index:280;padding:14px;pointer-events:none">
+  <div style="pointer-events:auto;max-width:430px;margin:0 auto;background:var(--white);border:1px solid var(--line-2);border-radius:16px;padding:18px 18px 16px;box-shadow:0 18px 50px rgba(0,0,0,0.22)">
+    <p style="font-size:13px;line-height:1.55;color:var(--ink-2);letter-spacing:-0.005em;margin-bottom:14px">
+      CrowdStamp gebruikt noodzakelijke cookies om in te loggen en de dienst te laten werken.
+      Optioneel gebruiken we analytische cookies om de app te verbeteren.
+      Lees meer in ons <a href="/privacybeleid.html" style="color:var(--accent);text-decoration:underline">privacy- en cookiebeleid</a>.
+    </p>
+
+    <!-- Granulaire voorkeuren (verborgen tot 'Voorkeuren' wordt geopend) -->
+    <div id="cookie-prefs" style="display:none;margin-bottom:14px;border-top:1px solid var(--line);padding-top:12px">
+      <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;opacity:0.6">
+        <input type="checkbox" checked disabled style="margin-top:2px"/>
+        <span style="font-size:12.5px;line-height:1.5;color:var(--ink-2)"><strong style="color:var(--ink);font-weight:600">Noodzakelijk</strong> — vereist om in te loggen en de dienst te laten werken. Altijd actief.</span>
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:10px">
+        <input type="checkbox" id="cookie-analytics-toggle" style="margin-top:2px"/>
+        <span style="font-size:12.5px;line-height:1.5;color:var(--ink-2)"><strong style="color:var(--ink);font-weight:600">Analytisch</strong> — helpt ons de app te verbeteren. Optioneel.</span>
+      </label>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+      <button type="button" onclick="acceptAllCookies()" class="submit-btn" style="background:var(--accent);flex:1 1 auto;justify-content:center;min-width:130px;padding:11px 14px">
+        <span class="submit-btn-label" style="font-size:13.5px">Alles accepteren</span>
+      </button>
+      <button type="button" id="cookie-secondary-btn" onclick="acceptNecessaryCookies()" style="flex:1 1 auto;min-width:130px;padding:11px 14px;border:1px solid var(--line-2);border-radius:12px;background:var(--white);color:var(--ink);font-size:13.5px;font-weight:600;cursor:pointer">Alleen noodzakelijke</button>
+      <button type="button" id="cookie-prefs-btn" onclick="toggleCookiePrefs()" style="flex:0 0 auto;padding:11px 12px;border:none;background:none;color:var(--ink-3);font-size:13px;font-weight:600;cursor:pointer;text-decoration:underline">Voorkeuren</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -2363,6 +2399,7 @@ const S = {
 // ════════════════════════════════════════════════════════
 async function initApp() {
   startClock();
+  initCookieConsent();
   console.log('initApp: waiting for auth state...');
   // onAuthStateChange handles everything including INITIAL_SESSION.
   // No need to call getSession() separately.
@@ -4536,6 +4573,93 @@ function escapeAttr(s) {
 // ════════════════════════════════════════════════════════
 // Toast
 // ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════
+// Cookie-consent (AVG)
+// ════════════════════════════════════════════════════════
+const COOKIE_CONSENT_KEY = 'cs_cookie_consent';
+
+function getConsent() {
+  try {
+    const raw = localStorage.getItem(COOKIE_CONSENT_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+// True als de gebruiker voor de gevraagde categorie toestemming heeft gegeven.
+function hasConsent(type) {
+  const c = getConsent();
+  if (!c) return false;
+  return type === 'necessary' ? true : c[type] === true;
+}
+
+// Placeholder voor toekomstige analytics — laadt nu bewust niets.
+function loadAnalytics() {
+  // Wordt alleen aangeroepen als hasConsent('analytics') true is.
+}
+
+function persistConsent(analytics) {
+  const consent = { necessary: true, analytics: !!analytics, ts: Date.now() };
+  try { localStorage.setItem(COOKIE_CONSENT_KEY, JSON.stringify(consent)); } catch {}
+  hideCookieBanner();
+  if (hasConsent('analytics')) loadAnalytics();
+}
+
+function showCookieBanner() {
+  const b = document.getElementById('cookie-banner');
+  if (b) b.style.display = 'block';
+}
+function hideCookieBanner() {
+  const b = document.getElementById('cookie-banner');
+  if (b) b.style.display = 'none';
+}
+
+// Open de banner opnieuw (vanuit 'Cookievoorkeuren'), met de huidige keuze voorgevuld.
+function openCookiePrefs() {
+  const c = getConsent();
+  const prefs = document.getElementById('cookie-prefs');
+  const toggle = document.getElementById('cookie-analytics-toggle');
+  if (prefs) prefs.style.display = 'block';
+  if (toggle) toggle.checked = !!(c && c.analytics);
+  const sec = document.getElementById('cookie-secondary-btn');
+  const prefsBtn = document.getElementById('cookie-prefs-btn');
+  if (prefsBtn) prefsBtn.style.display = 'none';
+  if (sec) { sec.textContent = 'Keuze opslaan'; sec.setAttribute('onclick', 'saveCookiePrefs()'); }
+  showCookieBanner();
+}
+
+// Toon/verberg het granulaire keuzepaneel binnen de banner.
+function toggleCookiePrefs() {
+  const prefs = document.getElementById('cookie-prefs');
+  if (!prefs) return;
+  const opening = prefs.style.display === 'none' || !prefs.style.display;
+  prefs.style.display = opening ? 'block' : 'none';
+  const sec = document.getElementById('cookie-secondary-btn');
+  const prefsBtn = document.getElementById('cookie-prefs-btn');
+  if (opening) {
+    const c = getConsent();
+    const toggle = document.getElementById('cookie-analytics-toggle');
+    if (toggle) toggle.checked = !!(c && c.analytics);
+    if (prefsBtn) prefsBtn.style.display = 'none';
+    if (sec) { sec.textContent = 'Keuze opslaan'; sec.setAttribute('onclick', 'saveCookiePrefs()'); }
+  }
+}
+
+function acceptAllCookies() { persistConsent(true); }
+function acceptNecessaryCookies() { persistConsent(false); }
+function saveCookiePrefs() {
+  const toggle = document.getElementById('cookie-analytics-toggle');
+  persistConsent(!!(toggle && toggle.checked));
+}
+
+// Init: toon de banner alleen als er nog geen keuze is; respecteer een bestaande keuze.
+function initCookieConsent() {
+  if (getConsent()) {
+    if (hasConsent('analytics')) loadAnalytics();
+  } else {
+    showCookieBanner();
+  }
+}
+
 function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
