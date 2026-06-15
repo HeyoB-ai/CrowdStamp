@@ -1048,6 +1048,8 @@ select.filter-input{cursor:pointer}
   border: 1px solid var(--line);
 }
 .detail-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.detail-photo.photo-na{display:flex;align-items:center;justify-content:center;background:var(--bg-2);color:var(--ink-4);cursor:default}
+.detail-photo.photo-na::after{content:'!';font-family:'Inter Tight',sans-serif;font-weight:700;font-size:13px}
 
 .admin-empty{
   background: var(--white);
@@ -3251,27 +3253,29 @@ async function doSubmit() {
   }
 
   // 2. Upload photos (still via sb.storage SDK; if that hangs, convert separately).
-  const urls = [];
+  //    De bucket 'werkfotos' is privé: we uploaden onder een pad dat met het
+  //    company_id begint en bewaren het PAD (geen publieke URL).
+  const paths = [];
+  const companyId = S.profile.company_id;
   for (let i = 0; i < S.photos.length; i++) {
     const p = S.photos[i];
-    const ext = (p.file.name.split('.').pop() || 'jpg').toLowerCase();
-    const path = `${S.profile.id}/${today}/${registrationId}_${i}.${ext}`;
+    const safeName = (p.file.name || `foto_${i}.jpg`).replace(/[^a-zA-Z0-9._-]/g, '_');
+    const path = `${companyId}/${S.profile.id}/${Date.now()}_${i}_${safeName}`;
     try {
       const { error: upErr } = await sb.storage
         .from('werkfotos')
         .upload(path, p.file, { contentType: p.file.type || 'image/jpeg', upsert: false });
       if (upErr) { console.warn('photo upload failed', upErr); continue; }
-      const { data: pub } = sb.storage.from('werkfotos').getPublicUrl(path);
-      if (pub?.publicUrl) urls.push(pub.publicUrl);
+      paths.push(path);
     } catch (e) {
       console.warn('photo upload threw', e);
     }
   }
 
-  // 3. Patch row with photo_urls.
-  if (urls.length) {
+  // 3. Patch row with photo_urls — we slaan de storage-PADEN op, niet de URL's.
+  if (paths.length) {
     try {
-      await supabasePatch('registrations', registrationId, { photo_urls: urls });
+      await supabasePatch('registrations', registrationId, { photo_urls: paths });
     } catch (e) {
       console.warn('photo_urls patch failed', e);
     }
@@ -3562,6 +3566,10 @@ function renderWeekDashboard() {
 
   tbody.innerHTML = workers.map((w, i) => renderWorkerRow(w, days, todayStr, i)).join('');
   cardList.innerHTML = workers.map(w => renderWorkerCard(w, days, todayStr)).join('');
+
+  // Foto's staan privé in Storage: vul de <img>'s met tijdelijke signed URLs.
+  hydratePhotos(tbody);
+  hydratePhotos(cardList);
 }
 
 function _rowIdFor(name) {
@@ -3663,13 +3671,38 @@ function renderWorkerDetail(w, days) {
                   ${r.project_name ? `<div class="detail-project">${escapeHtml(r.project_name)}</div>` : ''}
                   ${gpsIn ? `<div class="detail-gps">${escapeHtml(gpsIn)}</div>` : ''}
                   ${r.notes ? `<div class="detail-notes">${escapeHtml(r.notes)}</div>` : ''}
-                  ${(r.photo_urls && r.photo_urls.length) ? `<div class="detail-photos">${r.photo_urls.map(u => `<a href="${escapeAttr(u)}" target="_blank" rel="noopener" class="detail-photo"><img src="${escapeAttr(u)}" alt="Foto" loading="lazy"/></a>`).join('')}</div>` : ''}
+                  ${(r.photo_urls && r.photo_urls.length) ? `<div class="detail-photos">${r.photo_urls.map(u => `<a target="_blank" rel="noopener" class="detail-photo" data-photo-path="${escapeAttr(u)}"><img alt="Foto" loading="lazy"/></a>`).join('')}</div>` : ''}
                 </div>
               `;
             }).join('')}
       </div>
     `;
   }).join('')}</div>`;
+}
+
+// De 'werkfotos'-bucket is privé. Genereer per weergave een tijdelijke signed URL
+// (1 uur geldig) en zet die als <img>-src. Faalt dat (bijv. oude registraties met een
+// volledige publieke URL als pad), toon dan een nette "foto niet beschikbaar"-fallback.
+async function hydratePhotos(container) {
+  if (!container) return;
+  const anchors = container.querySelectorAll('.detail-photo[data-photo-path]');
+  for (const a of anchors) {
+    const path = a.getAttribute('data-photo-path');
+    a.removeAttribute('data-photo-path'); // voorkom dubbele verwerking
+    const img = a.querySelector('img');
+    try {
+      const { data, error } = await sb.storage.from('werkfotos').createSignedUrl(path, 3600);
+      if (error || !data?.signedUrl) throw (error || new Error('geen signed URL'));
+      a.href = data.signedUrl;
+      if (img) img.src = data.signedUrl;
+    } catch (e) {
+      console.warn('signed URL mislukt voor', path, e);
+      a.removeAttribute('href');
+      a.classList.add('photo-na');
+      a.title = 'Foto niet beschikbaar';
+      if (img) img.remove();
+    }
+  }
 }
 
 function toggleDetail(rowId, kind) {
