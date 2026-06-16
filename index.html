@@ -4482,6 +4482,23 @@ function hasPaidSubscription() {
   return !!(c && c.stripe_customer_id && ['growth', 'groei', 'pro'].includes(c.plan));
 }
 
+// Eén bron van waarheid voor betaalde functies (zoals export):
+// superuser, een betaald plan, of een nog geldige trial geeft toegang.
+// Leest plan/trial_ends_at uit S.company (die fetch haalt alle kolommen op).
+function companyHasPaidAccess() {
+  if (S.profile?.role === 'superuser') return true;
+  const c = S.company;
+  if (!c) return false;
+  const plan = String(c.plan || '').toLowerCase();
+  if (['growth', 'groei', 'pro'].includes(plan)) return true;
+  if (plan === 'trial') {
+    if (!c.trial_ends_at) return true;
+    const ends = new Date(c.trial_ends_at);
+    return isNaN(ends.getTime()) || ends.getTime() > Date.now();
+  }
+  return false;
+}
+
 // Zet de facturatieknop op "beheren" (betaald abonnement) of "afsluiten" (nog niet).
 function updateBillingButton() {
   const btn = document.getElementById('portal-btn');
