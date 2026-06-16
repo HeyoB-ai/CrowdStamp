@@ -1849,7 +1849,7 @@ svg{display:block}
 
       <div class="admin-header-actions">
         <button type="button" id="portal-btn" onclick="billingAction()" class="admin-text-btn">Abonnement beheren</button>
-        <button class="csv-btn" id="csv-btn" onclick="exportCSV()" disabled>Exporteer naar CSV</button>
+        <button class="csv-btn" id="csv-btn" onclick="handleExportClick()" disabled>Exporteer naar CSV</button>
         <button class="logout-btn" type="button" onclick="doLogout()" title="Uitloggen">
           <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 7V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2"/><path d="M18 15l4-4-4-4M22 11H10"/></svg>
         </button>
@@ -4581,7 +4581,18 @@ async function openPortal() {
 // ════════════════════════════════════════════════════════
 // CSV export
 // ════════════════════════════════════════════════════════
-function exportCSV() {
+// Entry-point van de export-knop: gate op betaald plan / geldige trial.
+// Betaalde toegang → genereer de export; anders → toon de upgrade-melding.
+function handleExportClick() {
+  if (companyHasPaidAccess()) {
+    doExcelExport();
+    return;
+  }
+  openExportGate();
+}
+
+// De daadwerkelijke generatie (ongewijzigd t.o.v. de oude exportCSV).
+function doExcelExport() {
   if (!S.currentRows || S.currentRows.length === 0) return;
   const cols = [
     'date','full_name','project_name',
