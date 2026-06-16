@@ -822,6 +822,8 @@ textarea.field-input{
 .admin-text-btn:hover{color:var(--ink)}
 .admin-shell .csv-btn{background:var(--accent);font-size:12.5px;padding:9px 14px}
 .admin-shell .csv-btn[disabled]{background:var(--bg-2);color:var(--ink-4)}
+.admin-shell .csv-btn.locked{background:var(--bg-2);color:var(--ink-2);display:inline-flex;align-items:center;gap:6px}
+.csv-btn .lock-badge{background:var(--accent);color:white;font-size:10px;font-weight:700;letter-spacing:0;padding:2px 6px;border-radius:6px;text-transform:uppercase}
 .admin-shell .logout-btn{background:var(--bg-2);width:34px;height:34px}
 
 .admin-summary{padding:22px 24px 0}
@@ -1849,7 +1851,7 @@ svg{display:block}
 
       <div class="admin-header-actions">
         <button type="button" id="portal-btn" onclick="billingAction()" class="admin-text-btn">Abonnement beheren</button>
-        <button class="csv-btn" id="csv-btn" onclick="exportCSV()" disabled>Exporteer naar CSV</button>
+        <button class="csv-btn" id="csv-btn" onclick="handleExportClick()" disabled>Exporteer naar CSV</button>
         <button class="logout-btn" type="button" onclick="doLogout()" title="Uitloggen">
           <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 7V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2"/><path d="M18 15l4-4-4-4M22 11H10"/></svg>
         </button>
@@ -2301,6 +2303,20 @@ svg{display:block}
         </button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Export-gate: melding voor niet-betaalde plannen -->
+<div id="export-gate-overlay" style="display:none;position:fixed;inset:0;z-index:250;background:rgba(15,15,15,0.45);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)closeExportGate()">
+  <div style="width:100%;max-width:380px;background:var(--white);border-radius:18px;padding:24px 22px;box-shadow:0 24px 60px rgba(0,0,0,0.22)">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px">
+      <h2 style="font-family:'Inter Tight',sans-serif;font-size:18px;font-weight:700;letter-spacing:-0.02em">Exporteren met Groei</h2>
+      <button type="button" onclick="closeExportGate()" aria-label="Sluiten" style="border:none;background:none;color:var(--ink-3);cursor:pointer;font-size:22px;line-height:1;padding:0 2px">×</button>
+    </div>
+    <p style="color:var(--ink-2);font-size:13.5px;line-height:1.55;margin-bottom:18px">Excel-export is beschikbaar vanaf Groei. Upgrade je abonnement om je uren te exporteren.</p>
+    <button type="button" onclick="closeExportGate();openUpgrade()" class="submit-btn" style="background:var(--accent);width:100%;justify-content:center">
+      <span class="submit-btn-label">Abonnement bekijken</span>
+    </button>
   </div>
 </div>
 
@@ -2791,6 +2807,7 @@ function showAdmin() {
   document.getElementById('admin-company').textContent = S.company?.name || '';
   document.getElementById('admin-role-pill').textContent = S.profile.role === 'superuser' ? 'Superuser' : 'Admin';
   updateBillingButton();
+  updateExportButton();
   S.adminDate = new Date();
   document.getElementById('filter-date').value = isoDate(S.adminDate);
   switchAdminTab('overzicht');
@@ -3483,7 +3500,7 @@ async function loadWeekDashboard() {
 
   if (error) {
     tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:32px;color:var(--accent)">Fout: ${escapeHtml(error.message)}</td></tr>`;
-    document.getElementById('csv-btn').disabled = true;
+    updateExportButton(false);
     return;
   }
 
@@ -3552,11 +3569,11 @@ function renderWeekDashboard() {
     tbody.innerHTML = '';
     cardList.innerHTML = '';
     empty.style.display = '';
-    document.getElementById('csv-btn').disabled = true;
+    updateExportButton(false);
     return;
   }
   empty.style.display = 'none';
-  document.getElementById('csv-btn').disabled = false;
+  updateExportButton(true);
 
   // Build the seven day strings for this week
   const startD = weekStart(S.adminDate);
@@ -4482,6 +4499,23 @@ function hasPaidSubscription() {
   return !!(c && c.stripe_customer_id && ['growth', 'groei', 'pro'].includes(c.plan));
 }
 
+// Eén bron van waarheid voor betaalde functies (zoals export):
+// superuser, een betaald plan, of een nog geldige trial geeft toegang.
+// Leest plan/trial_ends_at uit S.company (die fetch haalt alle kolommen op).
+function companyHasPaidAccess() {
+  if (S.profile?.role === 'superuser') return true;
+  const c = S.company;
+  if (!c) return false;
+  const plan = String(c.plan || '').toLowerCase();
+  if (['growth', 'groei', 'pro'].includes(plan)) return true;
+  if (plan === 'trial') {
+    if (!c.trial_ends_at) return true;
+    const ends = new Date(c.trial_ends_at);
+    return isNaN(ends.getTime()) || ends.getTime() > Date.now();
+  }
+  return false;
+}
+
 // Zet de facturatieknop op "beheren" (betaald abonnement) of "afsluiten" (nog niet).
 function updateBillingButton() {
   const btn = document.getElementById('portal-btn');
@@ -4564,7 +4598,41 @@ async function openPortal() {
 // ════════════════════════════════════════════════════════
 // CSV export
 // ════════════════════════════════════════════════════════
-function exportCSV() {
+// Entry-point van de export-knop: gate op betaald plan / geldige trial.
+// Betaalde toegang → genereer de export; anders → toon de upgrade-melding.
+function handleExportClick() {
+  if (companyHasPaidAccess()) {
+    doExcelExport();
+    return;
+  }
+  openExportGate();
+}
+
+function openExportGate() { document.getElementById('export-gate-overlay').style.display = 'flex'; }
+function closeExportGate() { document.getElementById('export-gate-overlay').style.display = 'none'; }
+
+// Zet de slot-indicatie op de export-knop. Zonder betaalde toegang blijft de knop
+// zichtbaar én klikbaar (zodat de upgrade-melding kan verschijnen); mét toegang
+// bepaalt de data-logica de disabled-state.
+// hasData = is er iets te exporteren (relevant voor betaalde gebruikers).
+function updateExportButton(hasData) {
+  const btn = document.getElementById('csv-btn');
+  if (!btn) return;
+  const locked = !companyHasPaidAccess();
+  btn.classList.toggle('locked', locked);
+  if (locked) {
+    btn.innerHTML = 'Exporteren 🔒 <span class="lock-badge">Groei</span>';
+    btn.title = 'Excel-export is beschikbaar vanaf Groei';
+    btn.disabled = false;
+  } else {
+    btn.textContent = 'Exporteer naar CSV';
+    btn.title = '';
+    if (typeof hasData === 'boolean') btn.disabled = !hasData;
+  }
+}
+
+// De daadwerkelijke generatie (ongewijzigd t.o.v. de oude exportCSV).
+function doExcelExport() {
   if (!S.currentRows || S.currentRows.length === 0) return;
   const cols = [
     'date','full_name','project_name',
