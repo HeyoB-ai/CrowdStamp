@@ -9,17 +9,25 @@
   functions = "netlify/functions"
 
 [[redirects]]
-  from = "/index.html"
-  to = "/index.html"
+  from = "/app"
+  to = "/app.html"
   status = 200
   force = true
 
 [[redirects]]
-  from = "/"
-  to = "/home.html"
-  status = 200
+  from = "/index.html"
+  to = "/app"
+  status = 301
+  force = true
 
 [[redirects]]
-  from = "/app"
-  to = "/index.html"
-  status = 200
+  from = "/home.html"
+  to = "/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/home"
+  to = "/"
+  status = 301
+  force = true

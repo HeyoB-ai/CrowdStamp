@@ -120,7 +120,7 @@ exports.handler = async (event) => {
           full_name: companyName,
           functie: functie || null,
         },
-        redirectTo: 'https://crowdstamp.netlify.app/index.html',
+        redirectTo: 'https://crowdstamp.netlify.app/app',
       });
       if (inviteErr) {
         console.error('[engage-contractor] invite error:', inviteErr);

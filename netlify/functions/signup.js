@@ -116,7 +116,7 @@ exports.handler = async (event) => {
         company_id: newCompanyId,
         full_name: name,
       },
-      redirectTo: 'https://crowdstamp.netlify.app/index.html',
+      redirectTo: 'https://crowdstamp.netlify.app/app',
     });
     console.log('[step] invite_user result:', {
       hasUser: !!invited?.user,

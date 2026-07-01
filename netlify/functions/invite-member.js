@@ -82,7 +82,7 @@ exports.handler = async (event) => {
         full_name: naam,
         functie: functie,
       },
-      redirectTo: 'https://crowdstamp.netlify.app/index.html',
+      redirectTo: 'https://crowdstamp.netlify.app/app',
     });
 
     if (inviteErr) {

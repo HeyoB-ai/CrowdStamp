@@ -119,7 +119,7 @@ exports.handler = async (event) => {
               company_id: newCompanyId,
               full_name: name || '',
             },
-            redirectTo: 'https://crowdstamp.netlify.app/index.html',
+            redirectTo: 'https://crowdstamp.netlify.app/app',
           });
           if (error) throw error;
           authUserId = invited?.user?.id || null;

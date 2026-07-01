@@ -78,8 +78,8 @@ exports.handler = async (event) => {
       ...(company.stripe_customer_id
         ? { customer: company.stripe_customer_id }
         : { customer_email: u.user.email }),
-      success_url: 'https://crowdstamp.netlify.app/index.html?checkout=success',
-      cancel_url: 'https://crowdstamp.netlify.app/index.html?checkout=cancel',
+      success_url: 'https://crowdstamp.netlify.app/app?checkout=success',
+      cancel_url: 'https://crowdstamp.netlify.app/app?checkout=cancel',
       allow_promotion_codes: true,
     });
     return { statusCode: 200, headers: CORS, body: JSON.stringify({ url: session.url }) };
